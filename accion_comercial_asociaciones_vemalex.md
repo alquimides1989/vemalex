@@ -1,9 +1,5 @@
 ﻿# Acción comercial para asociaciones familiares - VEMALEX
 
-## Campo automático para el saludo
-
-Usa la columna `Nombre_destinatario` del CSV y deja el saludo como `Hola, {{Nombre_destinatario}}:`. Así la herramienta de envío lo rellena automáticamente y no hay que modificar el correo a mano.
-
 ## Enfoque recomendado
 
 La mejor vía no es vender servicios jurídicos de forma directa. Para asociaciones familiares funciona mejor una propuesta de colaboración: charla gratuita, guía práctica, sesión de dudas o canal de orientación inicial para sus personas asociadas.
@@ -19,7 +15,7 @@ La mejor vía no es vender servicios jurídicos de forma directa. Para asociacio
 
 Asunto: Colaboración gratuita para familias de vuestra asociación
 
-Hola, {{Nombre_destinatario}}:
+Hola,
 
 Soy Verónica Macías, de VEMALEX Abogados, despacho especializado en Derecho de Familia que presta servicio en Málaga y Rincón de la Victoria.
 
@@ -47,7 +43,7 @@ https://vemalex.org
 
 Asunto: Posible colaboración en asuntos de familia y mediación
 
-Hola, {{Nombre_destinatario}}:
+Hola,
 
 Desde VEMALEX Abogados trabajamos asuntos de Derecho de Familia y mediación en Málaga y Rincón de la Victoria.
 
