@@ -1,11 +1,15 @@
 ﻿# Emails personalizados para asociaciones - VEMALEX Abogados
 
+## Campo automático para el saludo
+
+Cada bloque usa `Hola, {{Nombre_destinatario}}:`. El valor debe salir de la columna `Nombre_destinatario` del CSV, por ejemplo `equipo de AFAMA / COF Málaga`. Así no hay que tocar manualmente el nombre del destinatario antes de enviar.
+
 ## 1. AFAMA / COF Málaga
 
 Para: cofmalaga@gmail.com  
 Asunto: Colaboración gratuita para familias atendidas por AFAMA / COF Málaga
 
-Hola, equipo de AFAMA / COF Málaga:
+Hola, {{Nombre_destinatario}}:
 
 Soy Verónica Macías, de VEMALEX Abogados, despacho especializado en Derecho de Familia con servicio en Málaga y Rincón de la Victoria.
 
@@ -23,7 +27,7 @@ Verónica Macías
 VEMALEX Abogados  
 623 912 318  
 info@vemalex.com  
-www.vemalex.com
+https://vemalex.org
 
 Si preferís no recibir más comunicaciones de este tipo, nos lo indicáis y no volveremos a contactar.
 
@@ -34,7 +38,7 @@ Si preferís no recibir más comunicaciones de este tipo, nos lo indicáis y no 
 Para: infoandafam@gmail.com  
 Asunto: Propuesta de orientación jurídica para familias monoparentales
 
-Hola, equipo de ANDAFAM:
+Hola, {{Nombre_destinatario}}:
 
 Soy Verónica Macías, de VEMALEX Abogados, despacho especializado en Derecho de Familia con servicio en Málaga y Rincón de la Victoria.
 
@@ -52,7 +56,7 @@ Verónica Macías
 VEMALEX Abogados  
 623 912 318  
 info@vemalex.com  
-www.vemalex.com
+https://vemalex.org
 
 Si preferís no recibir más comunicaciones de este tipo, nos lo indicáis y no volveremos a contactar.
 
@@ -63,7 +67,7 @@ Si preferís no recibir más comunicaciones de este tipo, nos lo indicáis y no 
 Para: asociacionmejorenfamilia@gmail.com  
 Asunto: Recurso jurídico gratuito para familias acogedoras
 
-Hola, equipo de Mejor en Familia:
+Hola, {{Nombre_destinatario}}:
 
 Soy Verónica Macías, de VEMALEX Abogados, despacho especializado en Derecho de Familia con servicio en Málaga y Rincón de la Victoria.
 
@@ -81,7 +85,7 @@ Verónica Macías
 VEMALEX Abogados  
 623 912 318  
 info@vemalex.com  
-www.vemalex.com
+https://vemalex.org
 
 Si preferís no recibir más comunicaciones de este tipo, nos lo indicáis y no volveremos a contactar.
 
@@ -92,7 +96,7 @@ Si preferís no recibir más comunicaciones de este tipo, nos lo indicáis y no 
 Para: sanchezguerreroalicia@gmail.com  
 Asunto: Colaboración para orientación jurídica a familias
 
-Hola, equipo de ADEFAMI:
+Hola, {{Nombre_destinatario}}:
 
 Soy Verónica Macías, de VEMALEX Abogados, despacho especializado en Derecho de Familia con servicio en Málaga y Rincón de la Victoria.
 
@@ -110,7 +114,7 @@ Verónica Macías
 VEMALEX Abogados  
 623 912 318  
 info@vemalex.com  
-www.vemalex.com
+https://vemalex.org
 
 Si preferís no recibir más comunicaciones de este tipo, nos lo indicáis y no volveremos a contactar.
 
@@ -121,7 +125,7 @@ Si preferís no recibir más comunicaciones de este tipo, nos lo indicáis y no 
 Para: mediacion@mediando.me  
 Asunto: Posible colaboración en asuntos de familia y mediación
 
-Hola, equipo de Asociación Mediando:
+Hola, {{Nombre_destinatario}}:
 
 Soy Verónica Macías, de VEMALEX Abogados, despacho especializado en Derecho de Familia con servicio en Málaga y Rincón de la Victoria.
 
@@ -139,7 +143,7 @@ Verónica Macías
 VEMALEX Abogados  
 623 912 318  
 info@vemalex.com  
-www.vemalex.com
+https://vemalex.org
 
 Si preferís no recibir más comunicaciones de este tipo, nos lo indicáis y no volveremos a contactar.
 
@@ -150,7 +154,7 @@ Si preferís no recibir más comunicaciones de este tipo, nos lo indicáis y no 
 Para: info@cmicamalaga.es  
 Asunto: Presentación de VEMALEX Abogados para posibles colaboraciones
 
-Hola:
+Hola, {{Nombre_destinatario}}:
 
 Soy Verónica Macías, de VEMALEX Abogados, despacho especializado en Derecho de Familia con servicio en Málaga y Rincón de la Victoria.
 
@@ -168,7 +172,7 @@ Verónica Macías
 VEMALEX Abogados  
 623 912 318  
 info@vemalex.com  
-www.vemalex.com
+https://vemalex.org
 
 Si preferís no recibir más comunicaciones de este tipo, nos lo indicáis y no volveremos a contactar.
 
@@ -179,7 +183,7 @@ Si preferís no recibir más comunicaciones de este tipo, nos lo indicáis y no 
 Para: asociacion@padresseparados.com  
 Asunto: Colaboración local en Málaga y Rincón de la Victoria
 
-Hola, equipo de la Asociación de Padres Separados:
+Hola, {{Nombre_destinatario}}:
 
 Soy Verónica Macías, de VEMALEX Abogados, despacho especializado en Derecho de Familia con servicio en Málaga y Rincón de la Victoria.
 
@@ -197,7 +201,7 @@ Verónica Macías
 VEMALEX Abogados  
 623 912 318  
 info@vemalex.com  
-www.vemalex.com
+https://vemalex.org
 
 Si preferís no recibir más comunicaciones de este tipo, nos lo indicáis y no volveremos a contactar.
 
@@ -209,7 +213,7 @@ Para: csmalaga@fmyv.org
 CC opcional: fmyv@fmyv.org  
 Asunto: Recurso divulgativo para familias y menores en Málaga
 
-Hola, equipo de Fundación Márgenes y Vínculos:
+Hola, {{Nombre_destinatario}}:
 
 Soy Verónica Macías, de VEMALEX Abogados, despacho especializado en Derecho de Familia con servicio en Málaga y Rincón de la Victoria.
 
@@ -227,7 +231,7 @@ Verónica Macías
 VEMALEX Abogados  
 623 912 318  
 info@vemalex.com  
-www.vemalex.com
+https://vemalex.org
 
 Si preferís no recibir más comunicaciones de este tipo, nos lo indicáis y no volveremos a contactar.
 
@@ -239,7 +243,7 @@ Para: arrabal@arrabalempleo.org
 CC opcional: v.garcia@arrabalempleo.org  
 Asunto: Colaboración divulgativa para familias usuarias
 
-Hola, equipo de Arrabal-AID:
+Hola, {{Nombre_destinatario}}:
 
 Soy Verónica Macías, de VEMALEX Abogados, despacho especializado en Derecho de Familia con servicio en Málaga y Rincón de la Victoria.
 
@@ -257,7 +261,7 @@ Verónica Macías
 VEMALEX Abogados  
 623 912 318  
 info@vemalex.com  
-www.vemalex.com
+https://vemalex.org
 
 Si preferís no recibir más comunicaciones de este tipo, nos lo indicáis y no volveremos a contactar.
 
@@ -268,7 +272,7 @@ Si preferís no recibir más comunicaciones de este tipo, nos lo indicáis y no 
 Para: malaga@malagaacoge.org  
 Asunto: Colaboración puntual en orientación de Derecho de Familia
 
-Hola, equipo de Málaga Acoge:
+Hola, {{Nombre_destinatario}}:
 
 Soy Verónica Macías, de VEMALEX Abogados, despacho especializado en Derecho de Familia con servicio en Málaga y Rincón de la Victoria.
 
@@ -286,7 +290,7 @@ Verónica Macías
 VEMALEX Abogados  
 623 912 318  
 info@vemalex.com  
-www.vemalex.com
+https://vemalex.org
 
 Si preferís no recibir más comunicaciones de este tipo, nos lo indicáis y no volveremos a contactar.
 
@@ -297,7 +301,7 @@ Si preferís no recibir más comunicaciones de este tipo, nos lo indicáis y no 
 Para: info@asociacionalas.org  
 Asunto: Apoyo jurídico complementario en asuntos familiares sensibles
 
-Hola, equipo de Asociación ALAS:
+Hola, {{Nombre_destinatario}}:
 
 Soy Verónica Macías, de VEMALEX Abogados, despacho especializado en Derecho de Familia con servicio en Málaga y Rincón de la Victoria.
 
@@ -315,7 +319,7 @@ Verónica Macías
 VEMALEX Abogados  
 623 912 318  
 info@vemalex.com  
-www.vemalex.com
+https://vemalex.org
 
 Si preferís no recibir más comunicaciones de este tipo, nos lo indicáis y no volveremos a contactar.
 
@@ -326,7 +330,7 @@ Si preferís no recibir más comunicaciones de este tipo, nos lo indicáis y no 
 Para: contacto@asociaciontorrefuerte.org  
 Asunto: Charla gratuita para familias de Rincón de la Victoria
 
-Hola, equipo de Torre Fuerte:
+Hola, {{Nombre_destinatario}}:
 
 Soy Verónica Macías, de VEMALEX Abogados, despacho especializado en Derecho de Familia con servicio en Málaga y Rincón de la Victoria.
 
@@ -344,7 +348,7 @@ Verónica Macías
 VEMALEX Abogados  
 623 912 318  
 info@vemalex.com  
-www.vemalex.com
+https://vemalex.org
 
 Si preferís no recibir más comunicaciones de este tipo, nos lo indicáis y no volveremos a contactar.
 
@@ -355,7 +359,7 @@ Si preferís no recibir más comunicaciones de este tipo, nos lo indicáis y no 
 Para: juegarterincon@gmail.com  
 Asunto: Propuesta divulgativa para familias de Rincón
 
-Hola, equipo de JuegArte Rincón:
+Hola, {{Nombre_destinatario}}:
 
 Soy Verónica Macías, de VEMALEX Abogados, despacho especializado en Derecho de Familia con servicio en Málaga y Rincón de la Victoria.
 
@@ -373,7 +377,7 @@ Verónica Macías
 VEMALEX Abogados  
 623 912 318  
 info@vemalex.com  
-www.vemalex.com
+https://vemalex.org
 
 Si preferís no recibir más comunicaciones de este tipo, nos lo indicáis y no volveremos a contactar.
 
@@ -384,7 +388,7 @@ Si preferís no recibir más comunicaciones de este tipo, nos lo indicáis y no 
 Para: faco.oriental@asociacionaccam.org  
 Asunto: Recurso legal divulgativo para familias colaboradoras
 
-Hola, equipo de ACCAM:
+Hola, {{Nombre_destinatario}}:
 
 Soy Verónica Macías, de VEMALEX Abogados, despacho especializado en Derecho de Familia con servicio en Málaga y Rincón de la Victoria.
 
@@ -402,7 +406,7 @@ Verónica Macías
 VEMALEX Abogados  
 623 912 318  
 info@vemalex.com  
-www.vemalex.com
+https://vemalex.org
 
 Si preferís no recibir más comunicaciones de este tipo, nos lo indicáis y no volveremos a contactar.
 
@@ -413,7 +417,7 @@ Si preferís no recibir más comunicaciones de este tipo, nos lo indicáis y no 
 Para: asociacion@aemareh.com  
 Asunto: Orientación jurídica familiar para familias con menores con necesidades especiales
 
-Hola, equipo de AEMAREH:
+Hola, {{Nombre_destinatario}}:
 
 Soy Verónica Macías, de VEMALEX Abogados, despacho especializado en Derecho de Familia con servicio en Málaga y Rincón de la Victoria.
 
@@ -431,7 +435,7 @@ Verónica Macías
 VEMALEX Abogados  
 623 912 318  
 info@vemalex.com  
-www.vemalex.com
+https://vemalex.org
 
 Si preferís no recibir más comunicaciones de este tipo, nos lo indicáis y no volveremos a contactar.
 
@@ -442,7 +446,7 @@ Si preferís no recibir más comunicaciones de este tipo, nos lo indicáis y no 
 Para: asociacioneuropeanline2015@gmail.com  
 Asunto: Posible colaboración solidaria para familias y menores
 
-Hola, equipo de European-Line:
+Hola, {{Nombre_destinatario}}:
 
 Soy Verónica Macías, de VEMALEX Abogados, despacho especializado en Derecho de Familia con servicio en Málaga y Rincón de la Victoria.
 
@@ -458,7 +462,7 @@ Verónica Macías
 VEMALEX Abogados  
 623 912 318  
 info@vemalex.com  
-www.vemalex.com
+https://vemalex.org
 
 Si preferís no recibir más comunicaciones de este tipo, nos lo indicáis y no volveremos a contactar.
 
@@ -469,7 +473,7 @@ Si preferís no recibir más comunicaciones de este tipo, nos lo indicáis y no 
 Para: sedeqsfb@gmail.com  
 Asunto: Orientación jurídica puntual para familias en dificultad
 
-Hola, equipo de SEDEQ SFB:
+Hola, {{Nombre_destinatario}}:
 
 Soy Verónica Macías, de VEMALEX Abogados, despacho especializado en Derecho de Familia con servicio en Málaga y Rincón de la Victoria.
 
@@ -487,7 +491,7 @@ Verónica Macías
 VEMALEX Abogados  
 623 912 318  
 info@vemalex.com  
-www.vemalex.com
+https://vemalex.org
 
 Si preferís no recibir más comunicaciones de este tipo, nos lo indicáis y no volveremos a contactar.
 
@@ -498,7 +502,7 @@ Si preferís no recibir más comunicaciones de este tipo, nos lo indicáis y no 
 Para: laporvenirandalucia@gmail.com  
 Asunto: Colaboración social en orientación familiar
 
-Hola, equipo de La Porvenir Andalucía:
+Hola, {{Nombre_destinatario}}:
 
 Soy Verónica Macías, de VEMALEX Abogados, despacho especializado en Derecho de Familia con servicio en Málaga y Rincón de la Victoria.
 
@@ -516,7 +520,7 @@ Verónica Macías
 VEMALEX Abogados  
 623 912 318  
 info@vemalex.com  
-www.vemalex.com
+https://vemalex.org
 
 Si preferís no recibir más comunicaciones de este tipo, nos lo indicáis y no volveremos a contactar.
 

@@ -1,5 +1,9 @@
 # Acción comercial empresas - Rincón de la Victoria
 
+## Campo automático para el saludo
+
+Usa la columna `Nombre_destinatario` del CSV y deja el saludo como `Hola, {{Nombre_destinatario}}:`. Así la herramienta de envío lo rellena automáticamente y no hay que modificar el correo a mano.
+
 ## Objetivo
 
 Abrir conversaciones con empresas locales para ofrecer asesoramiento jurídico empresarial preventivo: contratos, reclamaciones, impagos, arrendamientos de local, protección de datos, condiciones comerciales, proveedores, documentación laboral básica y conflictos con clientes.
@@ -25,7 +29,7 @@ El mensaje que mejor encaja:
 
 Asunto: Revisión legal preventiva para empresas de Rincón
 
-Hola, [Nombre/Equipo]:
+Hola, {{Nombre_destinatario}}:
 
 Soy Verónica Macías, de VEMALEX Abogados, despacho con servicio en Málaga y Rincón de la Victoria.
 
@@ -41,7 +45,7 @@ Verónica Macías
 VEMALEX Abogados  
 623 912 318  
 info@vemalex.com  
-www.vemalex.com
+https://vemalex.org
 
 Si preferís no recibir más comunicaciones de este tipo, nos lo indicáis y no volveremos a contactar.
 
@@ -49,7 +53,7 @@ Si preferís no recibir más comunicaciones de este tipo, nos lo indicáis y no 
 
 Asunto: Charla gratuita para comercios y empresas de Rincón
 
-Hola, equipo de ACERV:
+Hola, {{Nombre_destinatario}}:
 
 Soy Verónica Macías, de VEMALEX Abogados, despacho con servicio en Málaga y Rincón de la Victoria.
 
@@ -74,7 +78,7 @@ Verónica Macías
 VEMALEX Abogados  
 623 912 318  
 info@vemalex.com  
-www.vemalex.com
+https://vemalex.org
 
 Si preferís no recibir más comunicaciones de este tipo, nos lo indicáis y no volveremos a contactar.
 
@@ -82,7 +86,7 @@ Si preferís no recibir más comunicaciones de este tipo, nos lo indicáis y no 
 
 Asunto: Apoyo jurídico para operaciones inmobiliarias y alquileres
 
-Hola, [Nombre/Equipo]:
+Hola, {{Nombre_destinatario}}:
 
 Soy Verónica Macías, de VEMALEX Abogados, despacho con servicio en Málaga y Rincón de la Victoria.
 
@@ -98,13 +102,13 @@ Verónica Macías
 VEMALEX Abogados  
 623 912 318  
 info@vemalex.com  
-www.vemalex.com
+https://vemalex.org
 
 ## Email para clínicas, ópticas y centros sanitarios
 
 Asunto: Revisión legal básica para clínicas y centros sanitarios
 
-Hola, [Nombre/Equipo]:
+Hola, {{Nombre_destinatario}}:
 
 Soy Verónica Macías, de VEMALEX Abogados, despacho con servicio en Málaga y Rincón de la Victoria.
 
@@ -120,13 +124,13 @@ Verónica Macías
 VEMALEX Abogados  
 623 912 318  
 info@vemalex.com  
-www.vemalex.com
+https://vemalex.org
 
 ## Email para academias y centros deportivos
 
 Asunto: Documentación legal para centros con alumnos, socios y menores
 
-Hola, [Nombre/Equipo]:
+Hola, {{Nombre_destinatario}}:
 
 Soy Verónica Macías, de VEMALEX Abogados, despacho con servicio en Málaga y Rincón de la Victoria.
 
@@ -142,7 +146,7 @@ Verónica Macías
 VEMALEX Abogados  
 623 912 318  
 info@vemalex.com  
-www.vemalex.com
+https://vemalex.org
 
 ## Secuencia recomendada
 
