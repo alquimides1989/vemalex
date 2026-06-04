@@ -748,6 +748,78 @@ h3 {
   line-height: 1.75;
 }
 
+.reviews {
+  background: linear-gradient(180deg, rgba(247, 244, 237, 0.72), rgba(255, 255, 255, 0));
+}
+
+.review-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  max-width: 1120px;
+  margin: 0 auto 28px;
+  color: var(--muted);
+}
+
+.review-score {
+  color: var(--navy);
+  font-size: 1.7rem;
+  font-weight: 800;
+}
+
+.review-stars {
+  color: var(--gold);
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+.review-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.review-card {
+  display: flex;
+  min-height: 260px;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: clamp(26px, 4vw, 38px);
+  background: var(--white);
+  border: 1px solid rgba(15, 31, 47, 0.08);
+  box-shadow: 0 18px 42px rgba(15, 31, 47, 0.08);
+}
+
+.review-card h3 {
+  margin: 18px 0 12px;
+  color: var(--navy);
+  font-size: 1.35rem;
+}
+
+.review-card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.75;
+}
+
+.review-card a {
+  align-self: flex-start;
+  margin-top: 26px;
+  color: var(--navy);
+  font-weight: 800;
+}
+
+.reviews-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: center;
+  margin-top: 32px;
+}
+
 .proof-panel {
   background: var(--white);
 }
@@ -1189,6 +1261,10 @@ h3 {
 
   .case-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .review-grid {
+    grid-template-columns: 1fr;
   }
 
   .urgent-band {
