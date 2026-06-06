@@ -438,7 +438,7 @@ function normalizeStore(data) {
     events: Array.isArray(data.events) ? data.events : [],
     timeEntries: Array.isArray(data.timeEntries) ? data.timeEntries : [],
     emailLog: Array.isArray(data.emailLog) ? data.emailLog : [],
-    aiProfiles: Array.isArray(data.aiProfiles) && data.aiProfiles.length ? data.aiProfiles : defaultAiProfiles(),
+    aiProfiles: mergeDefaultAiProfiles(Array.isArray(data.aiProfiles) ? data.aiProfiles : []),
     aiLog: Array.isArray(data.aiLog) ? data.aiLog : [],
     savedAt: data.savedAt || nowIso(),
     version: 4,
@@ -543,7 +543,7 @@ function serveStatic(req, res, url) {
   if (!file.startsWith(PUBLIC_DIR) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) return sendJson(res, 404, { error: "No encontrado" });
   const ext = path.extname(file).toLowerCase();
   const type = { ".html": "text/html; charset=utf-8", ".css": "text/css; charset=utf-8", ".js": "application/javascript; charset=utf-8" }[ext] || "application/octet-stream";
-  res.writeHead(200, { "Content-Type": type });
+  res.writeHead(200, { "Content-Type": type, "Cache-Control": "no-store" });
   fs.createReadStream(file).pipe(res);
 }
 
@@ -774,6 +774,22 @@ function baseLegalAiInstructions() {
 function defaultAiProfiles() {
   return [
     {
+      id: "aip_civil",
+      name: "Derecho civil",
+      instructions: "Especialista en derecho civil: obligaciones y contratos, reclamaciones de cantidad, arrendamientos, responsabilidad civil, propiedad, comunidades, sucesiones y negociacion extrajudicial. Prioriza analisis de hechos, prueba disponible, riesgos, plazos y estrategia procesal prudente.",
+      createdAt: nowIso(),
+      updatedAt: nowIso(),
+      createdBy: "system",
+    },
+    {
+      id: "aip_penal",
+      name: "Derecho penal",
+      instructions: "Especialista en derecho penal: denuncias, defensa, acusacion, violencia domestica o de genero, delitos patrimoniales, lesiones, quebrantamientos, conformidades y medidas cautelares. Prioriza presuncion de inocencia, prueba, plazos, garantias procesales y lenguaje prudente.",
+      createdAt: nowIso(),
+      updatedAt: nowIso(),
+      createdBy: "system",
+    },
+    {
       id: "aip_familia",
       name: "Derecho de familia",
       instructions: "Especialista en divorcio, custodia, pension de alimentos, modificacion de medidas, regimen de visitas y mediacion familiar. Prioriza claridad, estrategia procesal prudente y proteccion de menores.",
@@ -782,22 +798,20 @@ function defaultAiProfiles() {
       createdBy: "system",
     },
     {
-      id: "aip_redaccion",
-      name: "Redaccion juridica",
-      instructions: "Ayuda a redactar correos, resumenes, cronologias, requerimientos y borradores de escritos con lenguaje formal, conciso y ordenado.",
-      createdAt: nowIso(),
-      updatedAt: nowIso(),
-      createdBy: "system",
-    },
-    {
-      id: "aip_atencion_cliente",
-      name: "Atencion al cliente",
-      instructions: "Prepara respuestas comprensibles para clientes, con tono cercano, tranquilizador y profesional. Evita tecnicismos innecesarios.",
+      id: "aip_mercantil",
+      name: "Derecho mercantil",
+      instructions: "Especialista en derecho mercantil y asesoramiento empresarial: sociedades, contratos mercantiles, impagos, negociacion, cumplimiento, responsabilidad de administradores, conflictos societarios y prevencion de riesgos legales para empresas.",
       createdAt: nowIso(),
       updatedAt: nowIso(),
       createdBy: "system",
     },
   ];
+}
+
+function mergeDefaultAiProfiles(existing) {
+  const defaults = defaultAiProfiles();
+  const existingIds = new Set(existing.map((item) => item.id));
+  return [...existing, ...defaults.filter((item) => !existingIds.has(item.id))];
 }
 
 function loginAttemptKey(req, email) {

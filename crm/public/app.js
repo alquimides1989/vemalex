@@ -80,6 +80,7 @@ async function refreshAll() {
   renderCalendar();
   renderTimeEntries();
   renderEmailLog();
+  renderAiProfiles();
   renderAiLog();
   renderDocuments();
   renderSelects();
@@ -171,7 +172,9 @@ function renderSelects() {
   const matterOptions = `<option value="">Expediente</option>${state.matters.map((item) => `<option value="${item.id}">${esc(item.title)}</option>`).join("")}`;
   $$("[data-matter-select], [data-document-matter-select], [data-event-matter-select], [data-time-matter-select], [data-email-matter-select], [data-ai-matter-select]").forEach((select) => select.innerHTML = matterOptions);
   $$("[data-ai-client-select]").forEach((select) => select.innerHTML = clientOptions);
-  const aiProfileOptions = state.aiProfiles.map((item) => `<option value="${item.id}">${esc(item.name)}</option>`).join("");
+  const aiProfileOptions = state.aiProfiles.length
+    ? state.aiProfiles.map((item) => `<option value="${item.id}">${esc(item.name)}</option>`).join("")
+    : `<option value="">Sin perfiles IA</option>`;
   $$("[data-ai-profile-select]").forEach((select) => select.innerHTML = aiProfileOptions);
 }
 
@@ -232,6 +235,10 @@ async function saveAiProfile(event) {
 
 function renderAiLog() {
   $("[data-ai-log]").innerHTML = list(state.aiLog, (item) => `<strong>${esc(item.prompt)}</strong><span>${esc(item.createdAt)} - ${esc(matterTitle(item.matterId))}</span>`);
+}
+
+function renderAiProfiles() {
+  $("[data-ai-profiles]").innerHTML = list(state.aiProfiles, (item) => `<strong>${esc(item.name)}</strong><span>${esc(item.instructions).slice(0, 220)}${item.instructions?.length > 220 ? "..." : ""}</span>`);
 }
 
 async function search(event) {

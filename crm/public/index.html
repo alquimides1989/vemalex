@@ -211,7 +211,7 @@
               <article class="panel">
                 <h3>Asistente ChatGPT del despacho</h3>
                 <form class="form-grid" data-ai-form>
-                  <select name="profileId" data-ai-profile-select></select>
+                  <label>Perfil IA <select name="profileId" data-ai-profile-select></select></label>
                   <select name="clientId" data-ai-client-select></select>
                   <select name="matterId" data-ai-matter-select></select>
                   <textarea name="prompt" placeholder="Consulta, borrador, analisis o tarea para la IA..." required></textarea>
@@ -233,8 +233,9 @@
                   <button type="submit">Guardar perfil IA</button>
                 </form>
               </article>
-              <article class="panel"><h3>Historial IA</h3><div data-ai-log></div></article>
+              <article class="panel"><h3>Perfiles disponibles</h3><div data-ai-profiles></div></article>
             </div>
+            <article class="panel"><h3>Historial IA</h3><div data-ai-log></div></article>
           </section>
 
           <section class="view hidden" data-view="documents">

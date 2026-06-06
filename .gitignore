@@ -5,3 +5,4 @@ captura-*.png
 crm/data/
 crm/.env
 crm/backups/
+tools/
