@@ -14,7 +14,7 @@
           <p class="eyebrow">VEMALEX CRM</p>
           <h1>Acceso privado</h1>
           <label>Email <input name="email" type="email" autocomplete="username" required /></label>
-          <label>Contraseña <input name="password" type="password" autocomplete="current-password" required /></label>
+          <label>Contrasena <input name="password" type="password" autocomplete="current-password" required /></label>
           <button type="submit">Entrar</button>
           <p class="message" data-login-message></p>
         </form>
@@ -24,20 +24,21 @@
         <aside class="sidebar">
           <div class="brand">
             <img src="logo-vemalex.png" alt="VEMALEX Abogados" />
-            <span>Gestión interna</span>
+            <span>Gestion interna</span>
           </div>
           <nav>
             <button data-view-button="dashboard" class="active">Panel</button>
-            <button data-view-button="search">Búsqueda global</button>
+            <button data-view-button="search">Busqueda global</button>
             <button data-view-button="clients">Clientes</button>
             <button data-view-button="matters">Expedientes</button>
             <button data-view-button="tasks">Tareas</button>
             <button data-view-button="events">Calendario</button>
             <button data-view-button="timeEntries">Tiempos</button>
+            <button data-view-button="emails">Correos</button>
             <button data-view-button="documents">Documentos</button>
-            <button data-view-button="audit">Auditoría</button>
+            <button data-view-button="audit">Auditoria</button>
           </nav>
-          <button class="logout" data-logout>Cerrar sesión</button>
+          <button class="logout" data-logout>Cerrar sesion</button>
         </aside>
 
         <section class="workspace">
@@ -61,21 +62,26 @@
                 <div data-due-tasks></div>
               </article>
               <article class="panel">
-                <h3>Próximos plazos y citas</h3>
+                <h3>Proximos plazos y citas</h3>
                 <div data-upcoming-events></div>
               </article>
               <article class="panel">
-                <h3>Control económico</h3>
-                <div data-billing-summary></div>
+                <h3>Base local cifrada</h3>
+                <div class="list">
+                  <div class="item">
+                    <strong>Datos guardados en este PC</strong>
+                    <span>Clientes, expedientes y documentos se guardan en crm/data, cifrados y fuera del repositorio.</span>
+                  </div>
+                </div>
               </article>
             </div>
           </section>
 
           <section class="view hidden" data-view="search">
             <article class="panel">
-              <h3>Búsqueda global y control de conflictos</h3>
+              <h3>Busqueda global y control de conflictos</h3>
               <form class="search-box" data-search-form>
-                <input name="q" placeholder="Buscar por cliente, DNI, teléfono, expediente, juzgado, documento..." autocomplete="off" />
+                <input name="q" placeholder="Buscar por cliente, DNI, telefono, expediente, juzgado, documento..." autocomplete="off" />
                 <button type="submit">Buscar</button>
               </form>
               <div data-search-results></div>
@@ -89,8 +95,8 @@
                 <input name="name" placeholder="Nombre completo" required />
                 <input name="dni" placeholder="DNI/NIE" />
                 <input name="email" type="email" placeholder="Email" />
-                <input name="phone" placeholder="Teléfono" />
-                <input name="address" placeholder="Dirección" />
+                <input name="phone" placeholder="Telefono" />
+                <input name="address" placeholder="Direccion" />
                 <input name="tags" placeholder="Etiquetas" />
                 <textarea name="notes" placeholder="Notas internas"></textarea>
                 <button type="submit">Guardar cliente</button>
@@ -103,14 +109,14 @@
             <article class="panel">
               <h3>Nuevo expediente</h3>
               <form class="form-grid" data-matter-form>
-                <input name="title" placeholder="Título del expediente" required />
+                <input name="title" placeholder="Titulo del expediente" required />
                 <select name="clientId" data-client-select></select>
                 <input name="type" placeholder="Tipo: divorcio, custodia..." />
                 <input name="status" placeholder="Estado" value="abierto" />
                 <input name="court" placeholder="Juzgado" />
                 <input name="reference" placeholder="Referencia" />
                 <select name="risk"><option>bajo</option><option selected>medio</option><option>alto</option></select>
-                <textarea name="nextStep" placeholder="Próximo paso"></textarea>
+                <textarea name="nextStep" placeholder="Proximo paso"></textarea>
                 <button type="submit">Crear expediente</button>
               </form>
             </article>
@@ -136,24 +142,35 @@
           </section>
 
           <section class="view hidden" data-view="events">
-            <article class="panel">
-              <h3>Nuevo plazo o cita</h3>
-              <form class="form-grid" data-event-form>
-                <input name="title" placeholder="Título" required />
-                <select name="matterId" data-event-matter-select></select>
-                <input name="date" type="date" required />
-                <select name="kind">
-                  <option value="plazo">Plazo procesal</option>
-                  <option value="cita">Cita con cliente</option>
-                  <option value="vista">Vista / juicio</option>
-                  <option value="recordatorio">Recordatorio</option>
-                </select>
-                <input name="location" placeholder="Lugar o canal" />
-                <textarea name="notes" placeholder="Notas"></textarea>
-                <button type="submit">Guardar en calendario</button>
-              </form>
-            </article>
-            <article class="panel"><h3>Calendario</h3><div data-events></div></article>
+            <div class="grid calendar-layout">
+              <article class="panel">
+                <div class="calendar-head">
+                  <button type="button" data-calendar-prev>Anterior</button>
+                  <h3 data-calendar-title>Calendario</h3>
+                  <button type="button" data-calendar-next>Siguiente</button>
+                </div>
+                <div class="calendar-grid" data-calendar></div>
+              </article>
+              <article class="panel">
+                <h3>Nuevo evento</h3>
+                <form class="form-grid compact" data-event-form>
+                  <input name="title" placeholder="Titulo" required />
+                  <select name="matterId" data-event-matter-select></select>
+                  <input name="date" type="date" required />
+                  <input name="time" type="time" />
+                  <select name="kind">
+                    <option value="plazo">Plazo procesal</option>
+                    <option value="cita">Cita con cliente</option>
+                    <option value="vista">Vista / juicio</option>
+                    <option value="recordatorio">Recordatorio</option>
+                  </select>
+                  <input name="location" placeholder="Lugar o canal" />
+                  <textarea name="notes" placeholder="Notas"></textarea>
+                  <button type="submit">Guardar evento</button>
+                </form>
+              </article>
+            </div>
+            <article class="panel"><h3>Agenda</h3><div data-events></div></article>
           </section>
 
           <section class="view hidden" data-view="timeEntries">
@@ -162,14 +179,30 @@
               <form class="form-grid" data-time-form>
                 <select name="matterId" data-time-matter-select></select>
                 <input name="date" type="date" required />
-                <input name="concept" placeholder="Concepto: reunión, escrito, llamada..." required />
+                <input name="concept" placeholder="Concepto: reunion, escrito, llamada..." required />
                 <input name="minutes" type="number" min="0" step="15" placeholder="Minutos" required />
                 <input name="rate" type="number" min="0" step="1" placeholder="Tarifa hora opcional" />
                 <select name="billable"><option value="yes">Facturable</option><option value="no">No facturable</option></select>
                 <button type="submit">Registrar tiempo</button>
               </form>
             </article>
-            <article class="panel"><h3>Tiempos y facturación</h3><div data-time-entries></div></article>
+            <article class="panel"><h3>Tiempos y facturacion</h3><div data-time-entries></div></article>
+          </section>
+
+          <section class="view hidden" data-view="emails">
+            <article class="panel">
+              <h3>Enviar correo con Gmail</h3>
+              <form class="form-grid" data-email-form>
+                <select name="clientId" data-email-client-select></select>
+                <select name="matterId" data-email-matter-select></select>
+                <input name="to" type="email" placeholder="Destinatario" required />
+                <input name="subject" placeholder="Asunto" required />
+                <textarea name="message" placeholder="Mensaje" required></textarea>
+                <button type="submit">Enviar correo</button>
+              </form>
+              <p class="message" data-email-message></p>
+            </article>
+            <article class="panel"><h3>Correos enviados</h3><div data-email-log></div></article>
           </section>
 
           <section class="view hidden" data-view="documents">
@@ -177,7 +210,7 @@
               <h3>Subir documento cifrado</h3>
               <form class="form-grid" data-document-form>
                 <select name="matterId" data-document-matter-select></select>
-                <input name="category" placeholder="Categoría: demanda, sentencia, poder..." />
+                <input name="category" placeholder="Categoria: demanda, sentencia, poder..." />
                 <input name="file" type="file" required />
                 <button type="submit">Cifrar y guardar</button>
               </form>
@@ -186,7 +219,7 @@
           </section>
 
           <section class="view hidden" data-view="audit">
-            <article class="panel"><h3>Registro de auditoría</h3><div data-audit></div></article>
+            <article class="panel"><h3>Registro de auditoria</h3><div data-audit></div></article>
           </section>
         </section>
       </section>

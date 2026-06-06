@@ -2,6 +2,7 @@ const crypto = require("crypto");
 const fs = require("fs");
 const http = require("http");
 const path = require("path");
+const tls = require("tls");
 const { URL } = require("url");
 
 const ROOT = __dirname;
@@ -21,6 +22,9 @@ const CONFIG = {
   adminEmail: process.env.CRM_ADMIN_EMAIL || "info@vemalex.com",
   adminPassword: process.env.CRM_ADMIN_PASSWORD || "",
   secureCookie: process.env.CRM_COOKIE_SECURE === "true",
+  gmailUser: process.env.GMAIL_USER || "",
+  gmailAppPassword: process.env.GMAIL_APP_PASSWORD || "",
+  mailFrom: process.env.MAIL_FROM || process.env.GMAIL_USER || "info@vemalex.com",
 };
 
 if (CONFIG.masterKey.length < 32) {
@@ -88,6 +92,8 @@ async function handleApi(req, res, url) {
   if (url.pathname === "/api/tasks") return tasksApi(req, res, user);
   if (url.pathname === "/api/events") return collectionApi(req, res, user, "events", ["admin", "lawyer", "staff"]);
   if (url.pathname === "/api/time-entries") return collectionApi(req, res, user, "timeEntries", ["admin", "lawyer", "staff"]);
+  if (url.pathname === "/api/email/send" && req.method === "POST") return sendEmailApi(req, res, user);
+  if (url.pathname === "/api/email/log" && req.method === "GET") return sendJson(res, 200, { items: store.emailLog });
   if (url.pathname === "/api/notes") return notesApi(req, res, user);
   if (url.pathname === "/api/documents") return documentsApi(req, res, user);
   if (url.pathname.startsWith("/api/documents/") && req.method === "GET") return downloadDocument(req, res, user, url);
@@ -176,6 +182,29 @@ async function tasksApi(req, res, user) {
   return sendJson(res, 405, { error: "Metodo no permitido" });
 }
 
+async function sendEmailApi(req, res, user) {
+  if (!["admin", "lawyer", "staff"].includes(user.role)) return sendJson(res, 403, { error: "Permisos insuficientes" });
+  if (!CONFIG.gmailUser || !CONFIG.gmailAppPassword) return sendJson(res, 400, { error: "Gmail no configurado. Revisa GMAIL_USER y GMAIL_APP_PASSWORD en .env" });
+  const body = await readJson(req, 256 * 1024);
+  const to = text(body.to, 240);
+  const subject = text(body.subject, 240);
+  const message = text(body.message, 20000);
+  const clientId = text(body.clientId, 80);
+  const matterId = text(body.matterId, 80);
+  if (!to || !subject || !message) return sendJson(res, 400, { error: "Destinatario, asunto y mensaje son obligatorios" });
+  try {
+    await sendGmail({ to, subject, message });
+    const item = { id: id("ema"), to, subject, clientId, matterId, createdAt: nowIso(), createdBy: user.id, status: "sent" };
+    store.emailLog.unshift(item);
+    saveStore();
+    audit("email.send", user.id, { id: item.id, to, subject, clientId, matterId });
+    return sendJson(res, 200, { item });
+  } catch (error) {
+    audit("email.failed", user.id, { to, subject, error: error.message });
+    return sendJson(res, 502, { error: "No se pudo enviar el correo con Gmail" });
+  }
+}
+
 function searchApi(req, res, user, url) {
   if (!["admin", "lawyer", "staff", "read_only"].includes(user.role)) return sendJson(res, 403, { error: "Permisos insuficientes" });
   const q = String(url.searchParams.get("q") || "").trim().toLowerCase();
@@ -225,6 +254,7 @@ function matterExportApi(req, res, user, url) {
     documents: store.documents.filter((item) => item.matterId === matterId),
     events: store.events.filter((item) => item.matterId === matterId),
     timeEntries: store.timeEntries.filter((item) => item.matterId === matterId),
+    emailLog: store.emailLog.filter((item) => item.matterId === matterId),
   };
   audit("matters.export", user.id, { id: matterId });
   res.writeHead(200, {
@@ -307,7 +337,7 @@ function sanitizeRecord(key, body, userId) {
     return { ...base, title: text(body.title, 180), matterId: text(body.matterId, 80), dueDate: text(body.dueDate, 30), priority: text(body.priority || "media", 40), status: "open" };
   }
   if (key === "events") {
-    return { ...base, title: text(body.title, 180), matterId: text(body.matterId, 80), date: text(body.date, 30), kind: text(body.kind || "plazo", 80), location: text(body.location, 160), status: text(body.status || "previsto", 60), notes: text(body.notes, 1000) };
+    return { ...base, title: text(body.title, 180), matterId: text(body.matterId, 80), date: text(body.date, 30), time: text(body.time, 20), kind: text(body.kind || "plazo", 80), location: text(body.location, 160), status: text(body.status || "previsto", 60), notes: text(body.notes, 1000) };
   }
   if (key === "timeEntries") {
     const minutes = Math.max(0, Math.min(24 * 60, Number(body.minutes || 0)));
@@ -358,8 +388,9 @@ function normalizeStore(data) {
     documents: Array.isArray(data.documents) ? data.documents : [],
     events: Array.isArray(data.events) ? data.events : [],
     timeEntries: Array.isArray(data.timeEntries) ? data.timeEntries : [],
+    emailLog: Array.isArray(data.emailLog) ? data.emailLog : [],
     savedAt: data.savedAt || nowIso(),
-    version: 2,
+    version: 3,
   };
 }
 
@@ -517,6 +548,96 @@ function parseCookies(req) {
     acc[rawKey] = decodeURIComponent(rest.join("="));
     return acc;
   }, {});
+}
+
+function sendGmail({ to, subject, message }) {
+  const email = buildEmail({ from: CONFIG.mailFrom, to, subject, message });
+  return smtpSend({
+    host: "smtp.gmail.com",
+    port: 465,
+    user: CONFIG.gmailUser,
+    password: CONFIG.gmailAppPassword,
+    mailFrom: CONFIG.mailFrom,
+    rcptTo: to,
+    data: email,
+  });
+}
+
+function buildEmail({ from, to, subject, message }) {
+  const headers = [
+    `From: ${from}`,
+    `To: ${to}`,
+    `Subject: ${mimeHeader(subject)}`,
+    "MIME-Version: 1.0",
+    "Content-Type: text/plain; charset=utf-8",
+    "Content-Transfer-Encoding: 8bit",
+  ];
+  return `${headers.join("\r\n")}\r\n\r\n${message.replace(/\r?\n/g, "\r\n")}\r\n`;
+}
+
+function mimeHeader(value) {
+  return `=?UTF-8?B?${Buffer.from(String(value), "utf8").toString("base64")}?=`;
+}
+
+function smtpSend({ host, port, user, password, mailFrom, rcptTo, data }) {
+  return new Promise((resolve, reject) => {
+    const socket = tls.connect(port, host, { servername: host });
+    let buffer = "";
+    const fail = (error) => {
+      socket.destroy();
+      reject(error);
+    };
+    socket.setTimeout(15000, () => fail(new Error("Timeout SMTP")));
+    socket.on("error", fail);
+    socket.on("data", (chunk) => { buffer += chunk.toString("utf8"); });
+    socket.on("secureConnect", () => {
+      Promise.resolve()
+        .then(() => smtpExpect(() => buffer, (value) => { buffer = value; }, 220))
+        .then(() => smtpCommand(socket, () => buffer, (value) => { buffer = value; }, "EHLO localhost", 250))
+        .then(() => smtpCommand(socket, () => buffer, (value) => { buffer = value; }, `AUTH PLAIN ${Buffer.from(`\0${user}\0${password}`).toString("base64")}`, 235))
+        .then(() => smtpCommand(socket, () => buffer, (value) => { buffer = value; }, `MAIL FROM:<${mailFrom}>`, 250))
+        .then(() => smtpCommand(socket, () => buffer, (value) => { buffer = value; }, `RCPT TO:<${rcptTo}>`, [250, 251]))
+        .then(() => smtpCommand(socket, () => buffer, (value) => { buffer = value; }, "DATA", 354))
+        .then(() => smtpCommand(socket, () => buffer, (value) => { buffer = value; }, `${data.replace(/\r?\n\./g, "\r\n..")}\r\n.`, 250))
+        .then(() => smtpCommand(socket, () => buffer, (value) => { buffer = value; }, "QUIT", 221))
+        .then(() => {
+          socket.end();
+          resolve();
+        })
+        .catch(fail);
+    });
+  });
+}
+
+function smtpCommand(socket, getBuffer, setBuffer, command, expected) {
+  socket.write(`${command}\r\n`);
+  return smtpExpect(getBuffer, setBuffer, expected);
+}
+
+function smtpExpect(getBuffer, setBuffer, expected) {
+  const expectedCodes = Array.isArray(expected) ? expected : [expected];
+  return new Promise((resolve, reject) => {
+    const started = Date.now();
+    const timer = setInterval(() => {
+      const lines = getBuffer().split(/\r?\n/).filter(Boolean);
+      const last = lines.findLast((line) => /^\d{3} /.test(line));
+      if (last) {
+        const code = Number(last.slice(0, 3));
+        if (expectedCodes.includes(code)) {
+          setBuffer("");
+          clearInterval(timer);
+          resolve(last);
+        } else if (code >= 400) {
+          clearInterval(timer);
+          reject(new Error(last));
+        }
+      }
+      if (Date.now() - started > 12000) {
+        clearInterval(timer);
+        reject(new Error("Respuesta SMTP no recibida"));
+      }
+    }, 50);
+  });
 }
 
 function loginAttemptKey(req, email) {

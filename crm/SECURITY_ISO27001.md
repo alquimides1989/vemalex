@@ -49,6 +49,8 @@ Este software incorpora controles tecnicos alineados con buenas practicas de seg
 - El CRM permite guardar solo la informacion necesaria para cliente, expediente, tareas, calendario, tiempos, notas y documentos.
 - Los datos operativos se mantienen fuera del repositorio mediante `.gitignore`.
 - El registro de tiempos separa entradas facturables y no facturables para facilitar control economico sin exponer datos fuera del sistema.
+- Si `CRM_HOST=127.0.0.1`, el CRM solo responde en el propio PC y no queda accesible desde internet ni desde la red local.
+- Las credenciales de Gmail se guardan en `.env`, fuera del repositorio.
 
 ## Medidas necesarias fuera del codigo
 
@@ -72,6 +74,7 @@ Para aproximarse a ISO 27001/GDPR en un despacho real:
 - Usar HTTPS obligatorio.
 - Activar `CRM_COOKIE_SECURE=true`.
 - Restringir acceso por VPN, Cloudflare Access o lista de IPs.
+- Para uso en un unico PC, mantener `CRM_HOST=127.0.0.1`.
 - Activar MFA en cuentas del proveedor de hosting.
 - No ejecutar como administrador del sistema.
 - Copias de seguridad diarias cifradas.

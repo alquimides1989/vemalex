@@ -5,8 +5,10 @@
 - Logo real de VEMALEX en acceso y navegacion interna.
 - Busqueda global para localizar clientes, DNI/NIE, telefonos, expedientes, tareas, documentos, citas y tiempos.
 - Control de conflictos inicial al buscar nombres o datos antes de aceptar un asunto.
-- Calendario de plazos, citas, vistas y recordatorios.
+- Calendario mensual funcional de plazos, citas, vistas y recordatorios con seleccion directa del dia.
 - Panel de proximos vencimientos.
+- Envio de correos con Gmail desde la app, registrando el historial interno.
+- Base de datos local cifrada en `crm/data/store.enc`, no expuesta si `CRM_HOST=127.0.0.1`.
 - Registro de tiempos por expediente, con marcaje facturable/no facturable y tarifa orientativa.
 - Exportacion completa de expediente en JSON para copia interna o migracion.
 - Historial cronologico por expediente con notas, tareas, documentos, eventos y tiempos.

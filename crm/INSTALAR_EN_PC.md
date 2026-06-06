@@ -31,6 +31,28 @@ Antes de usar datos reales del despacho:
 
 La carpeta `data` contiene usuarios, expedientes y documentos cifrados. Debe tener copia de seguridad.
 
+## Privacidad de la base de datos
+
+Para que el CRM solo responda en este PC, deja en `.env`:
+
+```text
+CRM_HOST=127.0.0.1
+```
+
+Asi no queda publicado en internet ni accesible desde otros dispositivos de la red. Los datos se guardan cifrados en `crm/data/store.enc`.
+
+## Gmail
+
+El envio de correos se configura en `.env` con una contrasena de aplicacion de Google:
+
+```text
+GMAIL_USER=
+GMAIL_APP_PASSWORD=
+MAIL_FROM=info@vemalex.com
+```
+
+La contrasena no se sube al repositorio.
+
 ## Recomendacion
 
 Este archivo es un lanzador local de Windows, no un instalador firmado. Para un uso profesional con varios equipos, lo adecuado es alojarlo en un servidor privado con HTTPS, Cloudflare Access o VPN, y copias de seguridad automaticas.

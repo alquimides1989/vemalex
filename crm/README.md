@@ -16,8 +16,9 @@ No publiques esta carpeta como web publica de Cloudflare Pages. Este CRM debe ej
 - Expedientes con exportacion e historial cronologico.
 - Tareas.
 - Busqueda global y control inicial de conflictos.
-- Calendario de plazos, citas, vistas y recordatorios.
+- Calendario mensual funcional de plazos, citas, vistas y recordatorios.
 - Registro de tiempos y control facturable.
+- Envio de correos con Gmail mediante credenciales privadas en `.env`.
 - Notas internas.
 - Documentos cifrados con AES-256-GCM.
 - Categorias documentales.
@@ -44,6 +45,38 @@ http://127.0.0.1:8787
 Consulta tambien `INSTALAR_EN_PC.md`.
 
 Si Windows bloquea el ejecutable por no estar firmado, usa `VEMALEX CRM.cmd`.
+
+## Base de datos local
+
+Los datos no se suben a internet. El CRM guarda la informacion en:
+
+```text
+crm/data/store.enc
+```
+
+Ese archivo esta cifrado con `CRM_MASTER_KEY` y la carpeta `crm/data` esta fuera del repositorio. Para mantenerlo privado en un unico PC, usa:
+
+```text
+CRM_HOST=127.0.0.1
+```
+
+No uses `0.0.0.0` salvo que quieras permitir acceso desde otros equipos de la red local.
+
+## Gmail
+
+Para enviar correos desde el CRM con Gmail:
+
+1. Activa la verificacion en dos pasos en la cuenta de Google.
+2. Crea una contrasena de aplicacion para correo.
+3. Rellena en `.env`:
+
+```text
+GMAIL_USER=tu-cuenta@gmail.com
+GMAIL_APP_PASSWORD=contrasena-de-aplicacion
+MAIL_FROM=tu-cuenta@gmail.com
+```
+
+No guardes la contrasena de Gmail normal. Google recomienda usar contrasena de aplicacion u OAuth para este tipo de integraciones.
 
 ## Primer arranque local
 
