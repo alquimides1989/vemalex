@@ -87,6 +87,7 @@ async function refreshAll() {
   renderAiProfiles();
   renderAiLog();
   renderAiSettings();
+  renderExportMatters();
   renderDocuments();
   renderSelects();
 }
@@ -105,7 +106,7 @@ function renderSummary(summary) {
 }
 
 function renderClients() {
-  $("[data-clients]").innerHTML = list(state.clients, (item) => `<strong>${esc(item.name)}</strong><span>${esc(item.phone)} - ${esc(item.email)}</span><span>${esc(item.tags)}</span><div class="item-actions"><button data-email-client="${item.id}">Enviar correo</button></div>`);
+  $("[data-clients]").innerHTML = `<div class="item-actions export-actions"><a href="/api/export/clients">Exportar clientes Excel</a></div>${list(state.clients, (item) => `<strong>${esc(item.name)}</strong><span>${esc(item.phone)} - ${esc(item.email)}</span><span>${esc(item.tags)}</span><div class="item-actions"><button data-email-client="${item.id}">Enviar correo</button></div>`)}`;
   $$("[data-email-client]").forEach((button) => button.addEventListener("click", () => {
     const client = state.clients.find((item) => item.id === button.dataset.emailClient);
     setView("emails");
@@ -118,7 +119,7 @@ function renderClients() {
 function renderMatters() {
   $("[data-matters]").innerHTML = `<div class="list">${state.matters.map((item) => {
     const client = state.clients.find((c) => c.id === item.clientId);
-    return `<div class="item"><strong>${esc(item.title)}</strong><span>${esc(client?.name || "Sin cliente")} - ${esc(item.type)} - riesgo ${esc(item.risk)}</span><span>${esc(item.nextStep)}</span><div class="item-actions"><button data-timeline="${item.id}">Ver historial</button><a href="/api/matters/${item.id}/export">Exportar</a></div></div>`;
+    return `<div class="item"><strong>${esc(item.title)}</strong><span>${esc(client?.name || "Sin cliente")} - ${esc(item.type)} - riesgo ${esc(item.risk)}</span><span>${esc(item.nextStep)}</span><div class="item-actions"><button data-timeline="${item.id}">Ver historial</button><a href="/api/matters/${item.id}/export-xls">Excel</a><a href="/api/matters/${item.id}/export">JSON</a></div></div>`;
   }).join("") || "<p class='meta'>Sin registros</p>"}</div>`;
   $$("[data-timeline]").forEach((button) => button.addEventListener("click", () => loadTimeline(button.dataset.timeline)));
 }
@@ -168,7 +169,11 @@ function renderEmailLog() {
 }
 
 function renderDocuments() {
-  $("[data-documents]").innerHTML = `<div class="list">${state.documents.map((item) => `<div class="item"><strong>${esc(item.name)}</strong><span>${esc(item.category || "General")} - ${Math.round(item.size / 1024)} KB - ${esc(item.createdAt)}</span><div class="item-actions"><a href="/api/documents/${item.id}">Descargar</a></div></div>`).join("") || "<p class='meta'>Sin registros</p>"}</div>`;
+  $("[data-documents]").innerHTML = `<div class="item-actions export-actions"><a href="/api/export/documents">Exportar documentos Excel</a></div><div class="list">${state.documents.map((item) => `<div class="item"><strong>${esc(item.name)}</strong><span>${esc(item.category || "General")} - ${Math.round(item.size / 1024)} KB - ${esc(item.createdAt)}</span><div class="item-actions"><a href="/api/documents/${item.id}">Descargar</a></div></div>`).join("") || "<p class='meta'>Sin registros</p>"}</div>`;
+}
+
+function renderExportMatters() {
+  $("[data-export-matters]").innerHTML = list(state.matters, (item) => `<strong>${esc(item.title)}</strong><span>${esc(clientName(item.clientId))} - ${esc(item.type)} - ${esc(item.status)}</span><div class="item-actions"><a href="/api/matters/${item.id}/export-xls">Exportar expediente Excel</a></div>`);
 }
 
 function renderSelects() {
@@ -289,7 +294,7 @@ async function loadTimeline(matterId) {
 function setView(view) {
   $$("[data-view]").forEach((el) => el.classList.toggle("hidden", el.dataset.view !== view));
   $$("[data-view-button]").forEach((el) => el.classList.toggle("active", el.dataset.viewButton === view));
-  $("[data-view-title]").textContent = { dashboard: "Panel", search: "Busqueda global", clients: "Clientes", matters: "Expedientes", tasks: "Tareas", events: "Calendario", timeEntries: "Tiempos", emails: "Correos", ai: "ChatGPT", documents: "Documentos", audit: "Auditoria" }[view] || "Panel";
+  $("[data-view-title]").textContent = { dashboard: "Panel", search: "Busqueda global", clients: "Clientes", matters: "Expedientes", tasks: "Tareas", events: "Calendario", timeEntries: "Tiempos", emails: "Correos", ai: "ChatGPT", exports: "Exportar Excel", documents: "Documentos", audit: "Auditoria" }[view] || "Panel";
   if (view === "audit") loadAudit();
 }
 
@@ -342,6 +347,10 @@ function fileToBase64(file) {
 
 function matterTitle(matterId) {
   return state.matters.find((item) => item.id === matterId)?.title || "Sin expediente";
+}
+
+function clientName(clientId) {
+  return state.clients.find((item) => item.id === clientId)?.name || "Sin cliente";
 }
 
 function minutesLabel(minutes) {

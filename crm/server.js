@@ -86,11 +86,13 @@ async function handleApi(req, res, url) {
   }
   if (url.pathname === "/api/summary" && req.method === "GET") return sendJson(res, 200, summary());
 
+  if (url.pathname.startsWith("/api/export/") && req.method === "GET") return exportApi(req, res, user, url);
   if (url.pathname === "/api/search" && req.method === "GET") return searchApi(req, res, user, url);
   if (url.pathname === "/api/users") return usersApi(req, res, user);
   if (url.pathname === "/api/clients") return collectionApi(req, res, user, "clients", ["admin", "lawyer", "staff"]);
   if (url.pathname === "/api/matters") return collectionApi(req, res, user, "matters", ["admin", "lawyer", "staff"]);
   if (url.pathname.startsWith("/api/matters/") && url.pathname.endsWith("/timeline") && req.method === "GET") return matterTimelineApi(req, res, user, url);
+  if (url.pathname.startsWith("/api/matters/") && url.pathname.endsWith("/export-xls") && req.method === "GET") return matterExportXlsApi(req, res, user, url);
   if (url.pathname.startsWith("/api/matters/") && url.pathname.endsWith("/export") && req.method === "GET") return matterExportApi(req, res, user, url);
   if (url.pathname === "/api/tasks") return tasksApi(req, res, user);
   if (url.pathname === "/api/events") return collectionApi(req, res, user, "events", ["admin", "lawyer", "staff"]);
@@ -344,6 +346,64 @@ function matterExportApi(req, res, user, url) {
     "Content-Disposition": `attachment; filename="expediente-${matterId}.json"`,
   });
   res.end(JSON.stringify(payload, null, 2));
+}
+
+function matterExportXlsApi(req, res, user, url) {
+  if (!["admin", "lawyer", "staff"].includes(user.role)) return sendJson(res, 403, { error: "Permisos insuficientes" });
+  const matterId = url.pathname.split("/")[3];
+  const matter = store.matters.find((item) => item.id === matterId);
+  if (!matter) return sendJson(res, 404, { error: "Expediente no encontrado" });
+  const client = store.clients.find((item) => item.id === matter.clientId) || {};
+  const sheets = [
+    excelSheet("Expediente", [
+      ["Campo", "Valor"],
+      ["Titulo", matter.title],
+      ["Cliente", client.name],
+      ["Tipo", matter.type],
+      ["Estado", matter.status],
+      ["Juzgado", matter.court],
+      ["Referencia", matter.reference],
+      ["Riesgo", matter.risk],
+      ["Proximo paso", matter.nextStep],
+      ["Creado", matter.createdAt],
+    ]),
+    excelSheet("Cliente", rowsForExport("clients", [client])),
+    excelSheet("Tareas", rowsForExport("tasks", store.tasks.filter((item) => item.matterId === matterId))),
+    excelSheet("Agenda", rowsForExport("events", store.events.filter((item) => item.matterId === matterId))),
+    excelSheet("Tiempos", rowsForExport("timeEntries", store.timeEntries.filter((item) => item.matterId === matterId))),
+    excelSheet("Documentos", rowsForExport("documents", store.documents.filter((item) => item.matterId === matterId))),
+    excelSheet("Correos", rowsForExport("emailLog", store.emailLog.filter((item) => item.matterId === matterId))),
+    excelSheet("Notas", rowsForExport("notes", store.notes.filter((item) => item.matterId === matterId || item.clientId === client.id))),
+  ];
+  audit("matters.export.xls", user.id, { id: matterId });
+  return sendExcel(res, `expediente-${safeFileName(matter.title || matterId)}.xls`, sheets);
+}
+
+function exportApi(req, res, user, url) {
+  if (!["admin", "lawyer", "staff"].includes(user.role)) return sendJson(res, 403, { error: "Permisos insuficientes" });
+  const type = path.basename(url.pathname);
+  const builders = {
+    clients: () => [excelSheet("Clientes", rowsForExport("clients", store.clients))],
+    matters: () => [excelSheet("Expedientes", rowsForExport("matters", store.matters))],
+    tasks: () => [excelSheet("Tareas", rowsForExport("tasks", store.tasks))],
+    events: () => [excelSheet("Agenda", rowsForExport("events", store.events))],
+    "time-entries": () => [excelSheet("Tiempos", rowsForExport("timeEntries", store.timeEntries))],
+    documents: () => [excelSheet("Documentos", rowsForExport("documents", store.documents))],
+    emails: () => [excelSheet("Correos", rowsForExport("emailLog", store.emailLog))],
+    all: () => [
+      excelSheet("Clientes", rowsForExport("clients", store.clients)),
+      excelSheet("Expedientes", rowsForExport("matters", store.matters)),
+      excelSheet("Tareas", rowsForExport("tasks", store.tasks)),
+      excelSheet("Agenda", rowsForExport("events", store.events)),
+      excelSheet("Tiempos", rowsForExport("timeEntries", store.timeEntries)),
+      excelSheet("Documentos", rowsForExport("documents", store.documents)),
+      excelSheet("Correos", rowsForExport("emailLog", store.emailLog)),
+    ],
+  };
+  const build = builders[type];
+  if (!build) return sendJson(res, 404, { error: "Exportacion no encontrada" });
+  audit("export.xls", user.id, { type });
+  return sendExcel(res, `vemalex-${type}-${new Date().toISOString().slice(0, 10)}.xls`, build());
 }
 
 async function notesApi(req, res, user) {
@@ -601,6 +661,136 @@ function sendJson(res, status, payload) {
 function sendNoContent(res) {
   res.writeHead(204);
   res.end();
+}
+
+function sendExcel(res, filename, sheets) {
+  const workbook = `<!doctype html><html><head><meta charset="utf-8" />
+    <xml><x:ExcelWorkbook xmlns:x="urn:schemas-microsoft-com:office:excel"><x:ExcelWorksheets>${sheets.map((sheet) => `<x:ExcelWorksheet><x:Name>${xmlEscape(sheet.name)}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet>`).join("")}</x:ExcelWorksheets></x:ExcelWorkbook></xml>
+    <style>body{font-family:Arial,sans-serif} table{border-collapse:collapse} th{background:#0f1f2f;color:#fff;font-weight:bold} td,th{border:1px solid #d9d9d9;padding:6px;vertical-align:top;mso-number-format:"\\@"}.sheet-title{font-size:18px;font-weight:bold;color:#0f1f2f}</style>
+  </head><body>${sheets.map((sheet) => `<h1 class="sheet-title">${htmlEscape(sheet.name)}</h1>${htmlTable(sheet.rows)}`).join("<br style='mso-special-character:line-break;page-break-before:always' />")}</body></html>`;
+  res.writeHead(200, {
+    "Content-Type": "application/vnd.ms-excel; charset=utf-8",
+    "Content-Disposition": `attachment; filename="${filename.replace(/"/g, "")}"`,
+    "Cache-Control": "no-store",
+  });
+  res.end(workbook);
+}
+
+function excelSheet(name, rows) {
+  return { name: String(name || "Hoja").slice(0, 31), rows: rows && rows.length ? rows : [["Sin datos"]] };
+}
+
+function htmlTable(rows) {
+  return `<table>${rows.map((row, index) => `<tr>${row.map((cell) => index === 0 ? `<th>${htmlEscape(cell)}</th>` : `<td>${htmlEscape(excelSafe(cell))}</td>`).join("")}</tr>`).join("")}</table>`;
+}
+
+function rowsForExport(type, items) {
+  const list = Array.isArray(items) ? items : [];
+  const columns = exportColumns(type);
+  return [
+    columns.map((column) => column.label),
+    ...list.map((item) => columns.map((column) => column.value(item || {}))),
+  ];
+}
+
+function exportColumns(type) {
+  const common = [
+    { label: "ID", value: (item) => item.id },
+    { label: "Creado", value: (item) => item.createdAt },
+    { label: "Actualizado", value: (item) => item.updatedAt },
+  ];
+  const map = {
+    clients: [
+      { label: "Nombre", value: (item) => item.name },
+      { label: "DNI/NIE", value: (item) => item.dni },
+      { label: "Email", value: (item) => item.email },
+      { label: "Telefono", value: (item) => item.phone },
+      { label: "Direccion", value: (item) => item.address },
+      { label: "Etiquetas", value: (item) => item.tags },
+      { label: "Notas", value: (item) => item.notes },
+      ...common,
+    ],
+    matters: [
+      { label: "Titulo", value: (item) => item.title },
+      { label: "Cliente", value: (item) => clientName(item.clientId) },
+      { label: "Tipo", value: (item) => item.type },
+      { label: "Estado", value: (item) => item.status },
+      { label: "Juzgado", value: (item) => item.court },
+      { label: "Referencia", value: (item) => item.reference },
+      { label: "Riesgo", value: (item) => item.risk },
+      { label: "Proximo paso", value: (item) => item.nextStep },
+      ...common,
+    ],
+    tasks: [
+      { label: "Tarea", value: (item) => item.title },
+      { label: "Expediente", value: (item) => matterTitle(item.matterId) },
+      { label: "Fecha limite", value: (item) => item.dueDate },
+      { label: "Prioridad", value: (item) => item.priority },
+      { label: "Estado", value: (item) => item.status },
+      ...common,
+    ],
+    events: [
+      { label: "Evento", value: (item) => item.title },
+      { label: "Expediente", value: (item) => matterTitle(item.matterId) },
+      { label: "Fecha", value: (item) => item.date },
+      { label: "Hora", value: (item) => item.time },
+      { label: "Tipo", value: (item) => item.kind },
+      { label: "Lugar", value: (item) => item.location },
+      { label: "Notas", value: (item) => item.notes },
+      ...common,
+    ],
+    timeEntries: [
+      { label: "Concepto", value: (item) => item.concept },
+      { label: "Expediente", value: (item) => matterTitle(item.matterId) },
+      { label: "Fecha", value: (item) => item.date },
+      { label: "Minutos", value: (item) => item.minutes },
+      { label: "Horas", value: (item) => Math.round((Number(item.minutes || 0) / 60) * 100) / 100 },
+      { label: "Tarifa", value: (item) => item.rate },
+      { label: "Facturable", value: (item) => item.billable ? "Si" : "No" },
+      ...common,
+    ],
+    documents: [
+      { label: "Nombre", value: (item) => item.name },
+      { label: "Expediente", value: (item) => matterTitle(item.matterId) },
+      { label: "Categoria", value: (item) => item.category },
+      { label: "Tipo MIME", value: (item) => item.mimeType },
+      { label: "Tamano bytes", value: (item) => item.size },
+      { label: "SHA256", value: (item) => item.sha256 },
+      ...common,
+    ],
+    emailLog: [
+      { label: "Destinatario", value: (item) => item.to },
+      { label: "Asunto", value: (item) => item.subject },
+      { label: "Cliente", value: (item) => clientName(item.clientId) },
+      { label: "Expediente", value: (item) => matterTitle(item.matterId) },
+      { label: "Estado", value: (item) => item.status },
+      { label: "Creado", value: (item) => item.createdAt },
+    ],
+    notes: [
+      { label: "Expediente", value: (item) => matterTitle(item.matterId) },
+      { label: "Cliente", value: (item) => clientName(item.clientId) },
+      { label: "Nota", value: (item) => item.body },
+      ...common,
+    ],
+  };
+  return map[type] || common;
+}
+
+function excelSafe(value) {
+  const textValue = String(value ?? "");
+  return /^[=+\-@]/.test(textValue) ? `'${textValue}` : textValue;
+}
+
+function htmlEscape(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[char]));
+}
+
+function xmlEscape(value) {
+  return htmlEscape(value);
+}
+
+function safeFileName(value) {
+  return String(value || "export").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9_-]+/gi, "-").replace(/^-+|-+$/g, "").slice(0, 80) || "export";
 }
 
 function readJson(req, limit = 1024 * 1024) {

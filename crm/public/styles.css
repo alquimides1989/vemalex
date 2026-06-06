@@ -89,6 +89,9 @@ button, .button {
 .form-grid.compact { grid-template-columns: 1fr; }
 .form-grid.compact textarea, .form-grid.compact button { grid-column: auto; }
 .search-box { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; margin-bottom: 16px; }
+.export-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.export-grid .button, .export-actions a { display: block; text-align: center; text-decoration: none; }
+.export-actions { margin-bottom: 12px; }
 .calendar-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
 .calendar-head h3 { margin: 0; text-align: center; }
 .calendar-head button { padding: 9px 12px; background: var(--gold); }
@@ -112,7 +115,7 @@ button, .button {
 @media (max-width: 920px) {
   .shell { grid-template-columns: 1fr; }
   .sidebar { position: static; }
-  .stats, .grid.two, .calendar-layout, .form-grid, .search-box { grid-template-columns: 1fr; }
+  .stats, .grid.two, .calendar-layout, .form-grid, .search-box, .export-grid { grid-template-columns: 1fr; }
   .topbar { align-items: flex-start; flex-direction: column; }
   .calendar-day { min-height: 86px; }
 }

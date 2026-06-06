@@ -36,6 +36,7 @@
             <button data-view-button="timeEntries">Tiempos</button>
             <button data-view-button="emails">Correos</button>
             <button data-view-button="ai">ChatGPT</button>
+            <button data-view-button="exports">Exportar Excel</button>
             <button data-view-button="documents">Documentos</button>
             <button data-view-button="audit">Auditoria</button>
           </nav>
@@ -246,6 +247,26 @@
               <article class="panel"><h3>Perfiles disponibles</h3><div data-ai-profiles></div></article>
             </div>
             <article class="panel"><h3>Historial IA</h3><div data-ai-log></div></article>
+          </section>
+
+          <section class="view hidden" data-view="exports">
+            <article class="panel">
+              <h3>Exportaciones Excel</h3>
+              <div class="export-grid">
+                <a class="button" href="/api/export/all">Todo el CRM</a>
+                <a class="button" href="/api/export/clients">Clientes</a>
+                <a class="button" href="/api/export/matters">Expedientes</a>
+                <a class="button" href="/api/export/tasks">Tareas</a>
+                <a class="button" href="/api/export/events">Agenda</a>
+                <a class="button" href="/api/export/time-entries">Tiempos</a>
+                <a class="button" href="/api/export/documents">Documentos</a>
+                <a class="button" href="/api/export/emails">Correos</a>
+              </div>
+            </article>
+            <article class="panel">
+              <h3>Expedientes individuales</h3>
+              <div data-export-matters></div>
+            </article>
           </section>
 
           <section class="view hidden" data-view="documents">

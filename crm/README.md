@@ -21,6 +21,7 @@ No publiques esta carpeta como web publica de Cloudflare Pages. Este CRM debe ej
 - Envio de correos con Gmail mediante credenciales privadas en `.env`.
 - Asistente ChatGPT interno mediante OpenAI API.
 - Perfiles IA configurables para replicar instrucciones de GPTs personalizados.
+- Exportacion a Excel de clientes, expedientes, tareas, agenda, tiempos, documentos, correos y expediente individual.
 - Notas internas.
 - Documentos cifrados con AES-256-GCM.
 - Categorias documentales.
