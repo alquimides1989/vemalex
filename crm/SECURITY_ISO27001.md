@@ -51,6 +51,7 @@ Este software incorpora controles tecnicos alineados con buenas practicas de seg
 - El registro de tiempos separa entradas facturables y no facturables para facilitar control economico sin exponer datos fuera del sistema.
 - Si `CRM_HOST=127.0.0.1`, el CRM solo responde en el propio PC y no queda accesible desde internet ni desde la red local.
 - Las credenciales de Gmail se guardan en `.env`, fuera del repositorio.
+- La clave de OpenAI se guarda en `.env`, fuera del repositorio, y solo la usa el servidor local.
 
 ## Medidas necesarias fuera del codigo
 
@@ -89,6 +90,7 @@ Para aproximarse a ISO 27001/GDPR en un despacho real:
 - No hay versionado documental.
 - No hay antivirus para documentos subidos.
 - El lanzador local no sustituye a un despliegue profesional con HTTPS, MFA, backups y control de acceso perimetral.
+- Las consultas a OpenAI pueden incluir contexto de cliente/expediente seleccionado. Debe revisarse el criterio de minimizacion de datos antes de usarlo con informacion especialmente sensible.
 
 ## Siguiente fase recomendada
 

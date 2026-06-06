@@ -1,6 +1,6 @@
 let csrfToken = "";
 let calendarDate = new Date();
-let state = { clients: [], matters: [], tasks: [], documents: [], events: [], timeEntries: [], emailLog: [] };
+let state = { clients: [], matters: [], tasks: [], documents: [], events: [], timeEntries: [], emailLog: [], aiProfiles: [], aiLog: [] };
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
@@ -35,6 +35,8 @@ function bindEvents() {
   $("[data-time-form]").addEventListener("submit", submitForm("/api/time-entries", "timeEntries"));
   $("[data-document-form]").addEventListener("submit", uploadDocument);
   $("[data-email-form]").addEventListener("submit", sendEmail);
+  $("[data-ai-form]").addEventListener("submit", askAi);
+  $("[data-ai-profile-form]").addEventListener("submit", saveAiProfile);
   $("[data-calendar-prev]").addEventListener("click", () => moveCalendar(-1));
   $("[data-calendar-next]").addEventListener("click", () => moveCalendar(1));
   $("[data-email-client-select]").addEventListener("change", fillEmailFromClient);
@@ -49,7 +51,7 @@ async function showApp(result) {
 }
 
 async function refreshAll() {
-  const [summary, clients, matters, tasks, documents, events, timeEntries, emailLog] = await Promise.all([
+  const [summary, clients, matters, tasks, documents, events, timeEntries, emailLog, aiProfiles, aiLog] = await Promise.all([
     api("/api/summary"),
     api("/api/clients"),
     api("/api/matters"),
@@ -58,6 +60,8 @@ async function refreshAll() {
     api("/api/events"),
     api("/api/time-entries"),
     api("/api/email/log"),
+    api("/api/ai/profiles"),
+    api("/api/ai/log"),
   ]);
   state.clients = clients.items || [];
   state.matters = matters.items || [];
@@ -66,6 +70,8 @@ async function refreshAll() {
   state.events = events.items || [];
   state.timeEntries = timeEntries.items || [];
   state.emailLog = emailLog.items || [];
+  state.aiProfiles = aiProfiles.items || [];
+  state.aiLog = aiLog.items || [];
   renderSummary(summary);
   renderClients();
   renderMatters();
@@ -74,6 +80,7 @@ async function refreshAll() {
   renderCalendar();
   renderTimeEntries();
   renderEmailLog();
+  renderAiLog();
   renderDocuments();
   renderSelects();
 }
@@ -162,7 +169,10 @@ function renderSelects() {
   const clientOptions = `<option value="">Cliente</option>${state.clients.map((item) => `<option value="${item.id}">${esc(item.name)}</option>`).join("")}`;
   $$("[data-client-select], [data-email-client-select]").forEach((select) => select.innerHTML = clientOptions);
   const matterOptions = `<option value="">Expediente</option>${state.matters.map((item) => `<option value="${item.id}">${esc(item.title)}</option>`).join("")}`;
-  $$("[data-matter-select], [data-document-matter-select], [data-event-matter-select], [data-time-matter-select], [data-email-matter-select]").forEach((select) => select.innerHTML = matterOptions);
+  $$("[data-matter-select], [data-document-matter-select], [data-event-matter-select], [data-time-matter-select], [data-email-matter-select], [data-ai-matter-select]").forEach((select) => select.innerHTML = matterOptions);
+  $$("[data-ai-client-select]").forEach((select) => select.innerHTML = clientOptions);
+  const aiProfileOptions = state.aiProfiles.map((item) => `<option value="${item.id}">${esc(item.name)}</option>`).join("");
+  $$("[data-ai-profile-select]").forEach((select) => select.innerHTML = aiProfileOptions);
 }
 
 function submitForm(url, view) {
@@ -197,6 +207,33 @@ async function sendEmail(event) {
   }
 }
 
+async function askAi(event) {
+  event.preventDefault();
+  const form = event.target;
+  $("[data-ai-message]").textContent = "Consultando OpenAI...";
+  $("[data-ai-answer]").textContent = "";
+  const result = await api("/api/ai/chat", { method: "POST", body: formData(form), silent: true });
+  if (result?.error) {
+    $("[data-ai-message]").textContent = result.error;
+    return;
+  }
+  $("[data-ai-message]").textContent = `Perfil usado: ${result.profile?.name || "IA"}`;
+  $("[data-ai-answer]").textContent = result.answer || "Sin respuesta";
+  await refreshAll();
+}
+
+async function saveAiProfile(event) {
+  event.preventDefault();
+  await api("/api/ai/profiles", { method: "POST", body: formData(event.target) });
+  event.target.reset();
+  await refreshAll();
+  setView("ai");
+}
+
+function renderAiLog() {
+  $("[data-ai-log]").innerHTML = list(state.aiLog, (item) => `<strong>${esc(item.prompt)}</strong><span>${esc(item.createdAt)} - ${esc(matterTitle(item.matterId))}</span>`);
+}
+
 async function search(event) {
   event.preventDefault();
   const q = event.target.q.value.trim();
@@ -214,7 +251,7 @@ async function loadTimeline(matterId) {
 function setView(view) {
   $$("[data-view]").forEach((el) => el.classList.toggle("hidden", el.dataset.view !== view));
   $$("[data-view-button]").forEach((el) => el.classList.toggle("active", el.dataset.viewButton === view));
-  $("[data-view-title]").textContent = { dashboard: "Panel", search: "Busqueda global", clients: "Clientes", matters: "Expedientes", tasks: "Tareas", events: "Calendario", timeEntries: "Tiempos", emails: "Correos", documents: "Documentos", audit: "Auditoria" }[view] || "Panel";
+  $("[data-view-title]").textContent = { dashboard: "Panel", search: "Busqueda global", clients: "Clientes", matters: "Expedientes", tasks: "Tareas", events: "Calendario", timeEntries: "Tiempos", emails: "Correos", ai: "ChatGPT", documents: "Documentos", audit: "Auditoria" }[view] || "Panel";
   if (view === "audit") loadAudit();
 }
 

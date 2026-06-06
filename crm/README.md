@@ -19,6 +19,8 @@ No publiques esta carpeta como web publica de Cloudflare Pages. Este CRM debe ej
 - Calendario mensual funcional de plazos, citas, vistas y recordatorios.
 - Registro de tiempos y control facturable.
 - Envio de correos con Gmail mediante credenciales privadas en `.env`.
+- Asistente ChatGPT interno mediante OpenAI API.
+- Perfiles IA configurables para replicar instrucciones de GPTs personalizados.
 - Notas internas.
 - Documentos cifrados con AES-256-GCM.
 - Categorias documentales.
@@ -77,6 +79,19 @@ MAIL_FROM=tu-cuenta@gmail.com
 ```
 
 No guardes la contrasena de Gmail normal. Google recomienda usar contrasena de aplicacion u OAuth para este tipo de integraciones.
+
+## ChatGPT / OpenAI
+
+La API de OpenAI se configura en `.env`:
+
+```text
+OPENAI_API_KEY=sk-...
+OPENAI_MODEL=gpt-5-mini
+```
+
+Los GPTs personalizados de ChatGPT no se invocan directamente por nombre desde la API. La app incluye perfiles IA internos donde puedes pegar las instrucciones de tus GPTs personalizados y usarlos con los datos seleccionados del CRM.
+
+La clave se usa solo en el servidor local y no se envia al navegador.
 
 ## Primer arranque local
 

@@ -1,5 +1,6 @@
 const crypto = require("crypto");
 const fs = require("fs");
+const https = require("https");
 const http = require("http");
 const path = require("path");
 const tls = require("tls");
@@ -25,6 +26,8 @@ const CONFIG = {
   gmailUser: process.env.GMAIL_USER || "",
   gmailAppPassword: process.env.GMAIL_APP_PASSWORD || "",
   mailFrom: process.env.MAIL_FROM || process.env.GMAIL_USER || "info@vemalex.com",
+  openaiApiKey: process.env.OPENAI_API_KEY || "",
+  openaiModel: process.env.OPENAI_MODEL || "gpt-5-mini",
 };
 
 if (CONFIG.masterKey.length < 32) {
@@ -94,6 +97,9 @@ async function handleApi(req, res, url) {
   if (url.pathname === "/api/time-entries") return collectionApi(req, res, user, "timeEntries", ["admin", "lawyer", "staff"]);
   if (url.pathname === "/api/email/send" && req.method === "POST") return sendEmailApi(req, res, user);
   if (url.pathname === "/api/email/log" && req.method === "GET") return sendJson(res, 200, { items: store.emailLog });
+  if (url.pathname === "/api/ai/profiles") return aiProfilesApi(req, res, user);
+  if (url.pathname === "/api/ai/chat" && req.method === "POST") return aiChatApi(req, res, user);
+  if (url.pathname === "/api/ai/log" && req.method === "GET") return sendJson(res, 200, { items: store.aiLog });
   if (url.pathname === "/api/notes") return notesApi(req, res, user);
   if (url.pathname === "/api/documents") return documentsApi(req, res, user);
   if (url.pathname.startsWith("/api/documents/") && req.method === "GET") return downloadDocument(req, res, user, url);
@@ -202,6 +208,46 @@ async function sendEmailApi(req, res, user) {
   } catch (error) {
     audit("email.failed", user.id, { to, subject, error: error.message });
     return sendJson(res, 502, { error: "No se pudo enviar el correo con Gmail" });
+  }
+}
+
+async function aiProfilesApi(req, res, user) {
+  if (!["admin", "lawyer", "staff", "read_only"].includes(user.role)) return sendJson(res, 403, { error: "Permisos insuficientes" });
+  if (req.method === "GET") return sendJson(res, 200, { items: store.aiProfiles });
+  if (req.method !== "POST") return sendJson(res, 405, { error: "Metodo no permitido" });
+  if (!["admin", "lawyer"].includes(user.role)) return sendJson(res, 403, { error: "Solo administracion o letrado" });
+  const body = await readJson(req, 128 * 1024);
+  const item = sanitizeRecord("aiProfiles", body, user.id);
+  store.aiProfiles.unshift(item);
+  saveStore();
+  audit("ai.profile.create", user.id, { id: item.id, name: item.name });
+  return sendJson(res, 201, { item });
+}
+
+async function aiChatApi(req, res, user) {
+  if (!["admin", "lawyer", "staff"].includes(user.role)) return sendJson(res, 403, { error: "Permisos insuficientes" });
+  if (!CONFIG.openaiApiKey) return sendJson(res, 400, { error: "OpenAI no configurado. Revisa OPENAI_API_KEY en .env" });
+  const body = await readJson(req, 256 * 1024);
+  const profile = store.aiProfiles.find((item) => item.id === body.profileId) || store.aiProfiles[0];
+  const prompt = text(body.prompt, 20000);
+  const clientId = text(body.clientId, 80);
+  const matterId = text(body.matterId, 80);
+  if (!prompt) return sendJson(res, 400, { error: "Escribe una consulta para la IA" });
+  const context = buildAiContext({ clientId, matterId });
+  const instructions = `${baseLegalAiInstructions()}\n\nPerfil seleccionado:\n${profile?.instructions || ""}`;
+  try {
+    const answer = await openaiResponse({
+      instructions,
+      input: `${context}\n\nConsulta del usuario:\n${prompt}`,
+    });
+    const item = { id: id("ail"), profileId: profile?.id || "", prompt: prompt.slice(0, 500), answer: answer.slice(0, 2000), clientId, matterId, createdAt: nowIso(), createdBy: user.id };
+    store.aiLog.unshift(item);
+    saveStore();
+    audit("ai.chat", user.id, { id: item.id, profileId: item.profileId, clientId, matterId });
+    return sendJson(res, 200, { answer, profile });
+  } catch (error) {
+    audit("ai.failed", user.id, { error: error.message });
+    return sendJson(res, 502, { error: "No se pudo consultar OpenAI" });
   }
 }
 
@@ -344,6 +390,9 @@ function sanitizeRecord(key, body, userId) {
     const rate = Math.max(0, Math.min(9999, Number(body.rate || 0)));
     return { ...base, matterId: text(body.matterId, 80), date: text(body.date, 30), concept: text(body.concept, 220), minutes, rate, billable: body.billable !== "no" };
   }
+  if (key === "aiProfiles") {
+    return { ...base, name: text(body.name, 120), instructions: text(body.instructions, 12000) };
+  }
   if (key === "notes") {
     return { ...base, matterId: text(body.matterId, 80), clientId: text(body.clientId, 80), body: text(body.body, 5000) };
   }
@@ -389,8 +438,10 @@ function normalizeStore(data) {
     events: Array.isArray(data.events) ? data.events : [],
     timeEntries: Array.isArray(data.timeEntries) ? data.timeEntries : [],
     emailLog: Array.isArray(data.emailLog) ? data.emailLog : [],
+    aiProfiles: Array.isArray(data.aiProfiles) && data.aiProfiles.length ? data.aiProfiles : defaultAiProfiles(),
+    aiLog: Array.isArray(data.aiLog) ? data.aiLog : [],
     savedAt: data.savedAt || nowIso(),
-    version: 3,
+    version: 4,
   };
 }
 
@@ -638,6 +689,115 @@ function smtpExpect(getBuffer, setBuffer, expected) {
       }
     }, 50);
   });
+}
+
+function openaiResponse({ instructions, input }) {
+  const payload = JSON.stringify({
+    model: CONFIG.openaiModel,
+    instructions,
+    input,
+    store: false,
+  });
+  return new Promise((resolve, reject) => {
+    const req = https.request({
+      hostname: "api.openai.com",
+      path: "/v1/responses",
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${CONFIG.openaiApiKey}`,
+        "Content-Type": "application/json",
+        "Content-Length": Buffer.byteLength(payload),
+      },
+      timeout: 60000,
+    }, (response) => {
+      let data = "";
+      response.on("data", (chunk) => { data += chunk; });
+      response.on("end", () => {
+        try {
+          const parsed = JSON.parse(data || "{}");
+          if (response.statusCode >= 400) return reject(new Error(parsed.error?.message || `OpenAI ${response.statusCode}`));
+          resolve(extractOpenAiText(parsed));
+        } catch (error) {
+          reject(error);
+        }
+      });
+    });
+    req.on("timeout", () => {
+      req.destroy();
+      reject(new Error("Timeout OpenAI"));
+    });
+    req.on("error", reject);
+    req.write(payload);
+    req.end();
+  });
+}
+
+function extractOpenAiText(response) {
+  if (response.output_text) return response.output_text;
+  const chunks = [];
+  for (const item of response.output || []) {
+    for (const content of item.content || []) {
+      if (content.text) chunks.push(content.text);
+    }
+  }
+  return chunks.join("\n").trim() || "Sin respuesta";
+}
+
+function buildAiContext({ clientId, matterId }) {
+  const client = store.clients.find((item) => item.id === clientId);
+  const matter = store.matters.find((item) => item.id === matterId);
+  const relatedClient = client || store.clients.find((item) => item.id === matter?.clientId);
+  const tasks = store.tasks.filter((item) => item.matterId === matterId).slice(0, 8);
+  const events = store.events.filter((item) => item.matterId === matterId).slice(0, 8);
+  const notes = store.notes.filter((item) => item.matterId === matterId || item.clientId === relatedClient?.id).slice(0, 6);
+  return [
+    "Contexto interno del CRM VEMALEX:",
+    relatedClient ? `Cliente: ${relatedClient.name || ""}; DNI/NIE: ${relatedClient.dni || ""}; email: ${relatedClient.email || ""}; telefono: ${relatedClient.phone || ""}; notas: ${relatedClient.notes || ""}` : "Cliente: no seleccionado",
+    matter ? `Expediente: ${matter.title || ""}; tipo: ${matter.type || ""}; estado: ${matter.status || ""}; juzgado: ${matter.court || ""}; referencia: ${matter.reference || ""}; riesgo: ${matter.risk || ""}; proximo paso: ${matter.nextStep || ""}` : "Expediente: no seleccionado",
+    tasks.length ? `Tareas: ${tasks.map((item) => `${item.title} (${item.dueDate || "sin fecha"}, ${item.status})`).join("; ")}` : "Tareas: sin datos",
+    events.length ? `Agenda: ${events.map((item) => `${item.title} (${item.date || "sin fecha"} ${item.time || ""})`).join("; ")}` : "Agenda: sin datos",
+    notes.length ? `Notas internas: ${notes.map((item) => item.body).join(" | ")}` : "Notas internas: sin datos",
+  ].join("\n");
+}
+
+function baseLegalAiInstructions() {
+  return [
+    "Eres un asistente interno para VEMALEX Abogados.",
+    "Ayudas a preparar borradores, organizar informacion y proponer checklists de trabajo.",
+    "No sustituyes el criterio profesional de Veronica Macias ni emites una decision legal definitiva.",
+    "Cuando falten datos, indicalo claramente.",
+    "Evita inventar hechos, plazos o jurisprudencia.",
+    "Responde en espanol, con tono profesional, claro y util para un despacho de derecho de familia.",
+  ].join("\n");
+}
+
+function defaultAiProfiles() {
+  return [
+    {
+      id: "aip_familia",
+      name: "Derecho de familia",
+      instructions: "Especialista en divorcio, custodia, pension de alimentos, modificacion de medidas, regimen de visitas y mediacion familiar. Prioriza claridad, estrategia procesal prudente y proteccion de menores.",
+      createdAt: nowIso(),
+      updatedAt: nowIso(),
+      createdBy: "system",
+    },
+    {
+      id: "aip_redaccion",
+      name: "Redaccion juridica",
+      instructions: "Ayuda a redactar correos, resumenes, cronologias, requerimientos y borradores de escritos con lenguaje formal, conciso y ordenado.",
+      createdAt: nowIso(),
+      updatedAt: nowIso(),
+      createdBy: "system",
+    },
+    {
+      id: "aip_atencion_cliente",
+      name: "Atencion al cliente",
+      instructions: "Prepara respuestas comprensibles para clientes, con tono cercano, tranquilizador y profesional. Evita tecnicismos innecesarios.",
+      createdAt: nowIso(),
+      updatedAt: nowIso(),
+      createdBy: "system",
+    },
+  ];
 }
 
 function loginAttemptKey(req, email) {

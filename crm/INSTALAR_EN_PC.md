@@ -53,6 +53,17 @@ MAIL_FROM=info@vemalex.com
 
 La contrasena no se sube al repositorio.
 
+## OpenAI
+
+Para activar el asistente ChatGPT interno, rellena en `.env`:
+
+```text
+OPENAI_API_KEY=
+OPENAI_MODEL=gpt-5-mini
+```
+
+Despues reinicia el CRM. En la pantalla `ChatGPT` puedes usar los perfiles incluidos o crear uno nuevo copiando las instrucciones de tus GPTs personalizados.
+
 ## Recomendacion
 
 Este archivo es un lanzador local de Windows, no un instalador firmado. Para un uso profesional con varios equipos, lo adecuado es alojarlo en un servidor privado con HTTPS, Cloudflare Access o VPN, y copias de seguridad automaticas.
