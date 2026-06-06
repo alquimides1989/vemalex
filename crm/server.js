@@ -98,6 +98,7 @@ async function handleApi(req, res, url) {
   if (url.pathname === "/api/email/send" && req.method === "POST") return sendEmailApi(req, res, user);
   if (url.pathname === "/api/email/log" && req.method === "GET") return sendJson(res, 200, { items: store.emailLog });
   if (url.pathname === "/api/ai/profiles") return aiProfilesApi(req, res, user);
+  if (url.pathname === "/api/ai/settings") return aiSettingsApi(req, res, user);
   if (url.pathname === "/api/ai/chat" && req.method === "POST") return aiChatApi(req, res, user);
   if (url.pathname === "/api/ai/log" && req.method === "GET") return sendJson(res, 200, { items: store.aiLog });
   if (url.pathname === "/api/notes") return notesApi(req, res, user);
@@ -224,9 +225,30 @@ async function aiProfilesApi(req, res, user) {
   return sendJson(res, 201, { item });
 }
 
+async function aiSettingsApi(req, res, user) {
+  if (!["admin", "lawyer"].includes(user.role)) return sendJson(res, 403, { error: "Solo administracion o letrado" });
+  if (req.method === "GET") {
+    return sendJson(res, 200, {
+      configured: Boolean(getOpenAiApiKey()),
+      model: getOpenAiModel(),
+      source: CONFIG.openaiApiKey ? ".env" : (store.settings.openaiApiKey ? "base cifrada" : "sin configurar"),
+      maskedKey: maskSecret(getOpenAiApiKey()),
+    });
+  }
+  if (req.method !== "POST") return sendJson(res, 405, { error: "Metodo no permitido" });
+  const body = await readJson(req, 64 * 1024);
+  const apiKey = text(body.apiKey, 300);
+  const model = text(body.model || CONFIG.openaiModel || "gpt-5-mini", 80);
+  if (apiKey) store.settings.openaiApiKey = apiKey;
+  store.settings.openaiModel = model;
+  saveStore();
+  audit("ai.settings.update", user.id, { model, hasKey: Boolean(apiKey) });
+  return sendJson(res, 200, { configured: Boolean(getOpenAiApiKey()), model: getOpenAiModel(), source: CONFIG.openaiApiKey ? ".env" : "base cifrada", maskedKey: maskSecret(getOpenAiApiKey()) });
+}
+
 async function aiChatApi(req, res, user) {
   if (!["admin", "lawyer", "staff"].includes(user.role)) return sendJson(res, 403, { error: "Permisos insuficientes" });
-  if (!CONFIG.openaiApiKey) return sendJson(res, 400, { error: "OpenAI no configurado. Revisa OPENAI_API_KEY en .env" });
+  if (!getOpenAiApiKey()) return sendJson(res, 400, { error: "OpenAI no configurado. Pulsa Configurar OpenAI y pega tu API key." });
   const body = await readJson(req, 256 * 1024);
   const profile = store.aiProfiles.find((item) => item.id === body.profileId) || store.aiProfiles[0];
   const prompt = text(body.prompt, 20000);
@@ -440,6 +462,7 @@ function normalizeStore(data) {
     emailLog: Array.isArray(data.emailLog) ? data.emailLog : [],
     aiProfiles: mergeDefaultAiProfiles(Array.isArray(data.aiProfiles) ? data.aiProfiles : []),
     aiLog: Array.isArray(data.aiLog) ? data.aiLog : [],
+    settings: typeof data.settings === "object" && data.settings ? data.settings : {},
     savedAt: data.savedAt || nowIso(),
     version: 4,
   };
@@ -693,7 +716,7 @@ function smtpExpect(getBuffer, setBuffer, expected) {
 
 function openaiResponse({ instructions, input }) {
   const payload = JSON.stringify({
-    model: CONFIG.openaiModel,
+    model: getOpenAiModel(),
     instructions,
     input,
     store: false,
@@ -704,7 +727,7 @@ function openaiResponse({ instructions, input }) {
       path: "/v1/responses",
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${CONFIG.openaiApiKey}`,
+        "Authorization": `Bearer ${getOpenAiApiKey()}`,
         "Content-Type": "application/json",
         "Content-Length": Buffer.byteLength(payload),
       },
@@ -730,6 +753,19 @@ function openaiResponse({ instructions, input }) {
     req.write(payload);
     req.end();
   });
+}
+
+function getOpenAiApiKey() {
+  return CONFIG.openaiApiKey || store.settings.openaiApiKey || "";
+}
+
+function getOpenAiModel() {
+  return store.settings.openaiModel || CONFIG.openaiModel || "gpt-5-mini";
+}
+
+function maskSecret(value) {
+  if (!value) return "";
+  return `${value.slice(0, 7)}...${value.slice(-4)}`;
 }
 
 function extractOpenAiText(response) {

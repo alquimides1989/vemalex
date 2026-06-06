@@ -1,6 +1,6 @@
 let csrfToken = "";
 let calendarDate = new Date();
-let state = { clients: [], matters: [], tasks: [], documents: [], events: [], timeEntries: [], emailLog: [], aiProfiles: [], aiLog: [] };
+let state = { clients: [], matters: [], tasks: [], documents: [], events: [], timeEntries: [], emailLog: [], aiProfiles: [], aiLog: [], aiSettings: {} };
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
@@ -37,6 +37,7 @@ function bindEvents() {
   $("[data-email-form]").addEventListener("submit", sendEmail);
   $("[data-ai-form]").addEventListener("submit", askAi);
   $("[data-ai-profile-form]").addEventListener("submit", saveAiProfile);
+  $("[data-ai-settings-form]").addEventListener("submit", saveAiSettings);
   $("[data-calendar-prev]").addEventListener("click", () => moveCalendar(-1));
   $("[data-calendar-next]").addEventListener("click", () => moveCalendar(1));
   $("[data-email-client-select]").addEventListener("change", fillEmailFromClient);
@@ -51,7 +52,7 @@ async function showApp(result) {
 }
 
 async function refreshAll() {
-  const [summary, clients, matters, tasks, documents, events, timeEntries, emailLog, aiProfiles, aiLog] = await Promise.all([
+  const [summary, clients, matters, tasks, documents, events, timeEntries, emailLog, aiProfiles, aiLog, aiSettings] = await Promise.all([
     api("/api/summary"),
     api("/api/clients"),
     api("/api/matters"),
@@ -62,6 +63,7 @@ async function refreshAll() {
     api("/api/email/log"),
     api("/api/ai/profiles"),
     api("/api/ai/log"),
+    api("/api/ai/settings"),
   ]);
   state.clients = clients.items || [];
   state.matters = matters.items || [];
@@ -72,6 +74,7 @@ async function refreshAll() {
   state.emailLog = emailLog.items || [];
   state.aiProfiles = aiProfiles.items || [];
   state.aiLog = aiLog.items || [];
+  state.aiSettings = aiSettings || {};
   renderSummary(summary);
   renderClients();
   renderMatters();
@@ -82,6 +85,7 @@ async function refreshAll() {
   renderEmailLog();
   renderAiProfiles();
   renderAiLog();
+  renderAiSettings();
   renderDocuments();
   renderSelects();
 }
@@ -231,6 +235,26 @@ async function saveAiProfile(event) {
   event.target.reset();
   await refreshAll();
   setView("ai");
+}
+
+async function saveAiSettings(event) {
+  event.preventDefault();
+  const result = await api("/api/ai/settings", { method: "POST", body: formData(event.target), silent: true });
+  if (result?.error) {
+    $("[data-ai-settings-status]").textContent = result.error;
+    return;
+  }
+  event.target.apiKey.value = "";
+  state.aiSettings = result;
+  renderAiSettings();
+}
+
+function renderAiSettings() {
+  const status = state.aiSettings.configured
+    ? `OpenAI configurado (${state.aiSettings.source}) - ${state.aiSettings.maskedKey || "clave guardada"} - modelo ${state.aiSettings.model}`
+    : "OpenAI sin configurar. Pega tu API key y guarda.";
+  $("[data-ai-settings-status]").textContent = status;
+  if (state.aiSettings.model) $("[data-ai-settings-form]").model.value = state.aiSettings.model;
 }
 
 function renderAiLog() {
