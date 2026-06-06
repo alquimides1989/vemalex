@@ -31,6 +31,7 @@ if (CONFIG.masterKey.length < 32) {
 ensureDirectories();
 
 const sessions = new Map();
+const loginAttempts = new Map();
 const encryptionKey = crypto.createHash("sha256").update(CONFIG.masterKey).digest();
 
 initUsers();
@@ -78,10 +79,15 @@ async function handleApi(req, res, url) {
   }
   if (url.pathname === "/api/summary" && req.method === "GET") return sendJson(res, 200, summary());
 
+  if (url.pathname === "/api/search" && req.method === "GET") return searchApi(req, res, user, url);
   if (url.pathname === "/api/users") return usersApi(req, res, user);
   if (url.pathname === "/api/clients") return collectionApi(req, res, user, "clients", ["admin", "lawyer", "staff"]);
   if (url.pathname === "/api/matters") return collectionApi(req, res, user, "matters", ["admin", "lawyer", "staff"]);
+  if (url.pathname.startsWith("/api/matters/") && url.pathname.endsWith("/timeline") && req.method === "GET") return matterTimelineApi(req, res, user, url);
+  if (url.pathname.startsWith("/api/matters/") && url.pathname.endsWith("/export") && req.method === "GET") return matterExportApi(req, res, user, url);
   if (url.pathname === "/api/tasks") return tasksApi(req, res, user);
+  if (url.pathname === "/api/events") return collectionApi(req, res, user, "events", ["admin", "lawyer", "staff"]);
+  if (url.pathname === "/api/time-entries") return collectionApi(req, res, user, "timeEntries", ["admin", "lawyer", "staff"]);
   if (url.pathname === "/api/notes") return notesApi(req, res, user);
   if (url.pathname === "/api/documents") return documentsApi(req, res, user);
   if (url.pathname.startsWith("/api/documents/") && req.method === "GET") return downloadDocument(req, res, user, url);
@@ -94,12 +100,16 @@ async function login(req, res) {
   const body = await readJson(req);
   const email = String(body.email || "").trim().toLowerCase();
   const password = String(body.password || "");
+  const bucket = loginBucket(req, email);
+  if (bucket.blockedUntil > Date.now()) return sendJson(res, 429, { error: "Demasiados intentos. Espera unos minutos." });
   const user = getUsers().find((item) => item.email === email && !item.disabled);
   if (!user || !verifyPassword(password, user.password)) {
+    registerFailedLogin(req, email);
     audit("auth.failed", null, { email });
     return sendJson(res, 401, { error: "Credenciales incorrectas" });
   }
 
+  loginAttempts.delete(loginAttemptKey(req, email));
   const token = crypto.randomBytes(32).toString("hex");
   const csrf = crypto.randomBytes(24).toString("hex");
   sessions.set(token, { token, csrf, userId: user.id, createdAt: nowIso(), lastSeen: Date.now() });
@@ -166,6 +176,64 @@ async function tasksApi(req, res, user) {
   return sendJson(res, 405, { error: "Metodo no permitido" });
 }
 
+function searchApi(req, res, user, url) {
+  if (!["admin", "lawyer", "staff", "read_only"].includes(user.role)) return sendJson(res, 403, { error: "Permisos insuficientes" });
+  const q = String(url.searchParams.get("q") || "").trim().toLowerCase();
+  if (q.length < 2) return sendJson(res, 200, { items: [] });
+  const pools = [
+    ["Cliente", store.clients, (item) => item.name, (item) => [item.email, item.phone, item.dni, item.tags].filter(Boolean).join(" · ")],
+    ["Expediente", store.matters, (item) => item.title, (item) => [clientName(item.clientId), item.type, item.reference, item.court].filter(Boolean).join(" · ")],
+    ["Tarea", store.tasks, (item) => item.title, (item) => [matterTitle(item.matterId), item.dueDate, item.status].filter(Boolean).join(" · ")],
+    ["Documento", store.documents, (item) => item.name, (item) => [matterTitle(item.matterId), Math.round((item.size || 0) / 1024) + " KB"].filter(Boolean).join(" · ")],
+    ["Calendario", store.events, (item) => item.title, (item) => [item.date, item.kind, matterTitle(item.matterId)].filter(Boolean).join(" · ")],
+    ["Tiempo", store.timeEntries, (item) => item.concept, (item) => [item.date, matterTitle(item.matterId), minutesLabel(item.minutes)].filter(Boolean).join(" · ")],
+  ];
+  const items = pools.flatMap(([type, records, title, subtitle]) => records
+    .filter((item) => JSON.stringify(item).toLowerCase().includes(q))
+    .slice(0, 12)
+    .map((item) => ({ id: item.id, type, title: title(item), subtitle: subtitle(item), matterId: item.matterId || "" })));
+  return sendJson(res, 200, { items: items.slice(0, 60) });
+}
+
+function matterTimelineApi(req, res, user, url) {
+  if (!["admin", "lawyer", "staff", "read_only"].includes(user.role)) return sendJson(res, 403, { error: "Permisos insuficientes" });
+  const matterId = url.pathname.split("/")[3];
+  const matter = store.matters.find((item) => item.id === matterId);
+  if (!matter) return sendJson(res, 404, { error: "Expediente no encontrado" });
+  const items = [
+    ...store.notes.filter((item) => item.matterId === matterId).map((item) => timelineItem("Nota", item.createdAt, item.body, item.id)),
+    ...store.tasks.filter((item) => item.matterId === matterId).map((item) => timelineItem("Tarea", item.dueDate || item.createdAt, `${item.title} · ${item.status}`, item.id)),
+    ...store.documents.filter((item) => item.matterId === matterId).map((item) => timelineItem("Documento", item.createdAt, item.name, item.id)),
+    ...store.events.filter((item) => item.matterId === matterId).map((item) => timelineItem("Calendario", item.date || item.createdAt, `${item.title} · ${item.kind}`, item.id)),
+    ...store.timeEntries.filter((item) => item.matterId === matterId).map((item) => timelineItem("Tiempo", item.date || item.createdAt, `${item.concept} · ${minutesLabel(item.minutes)}`, item.id)),
+  ].sort((a, b) => String(b.date).localeCompare(String(a.date)));
+  audit("matters.timeline", user.id, { id: matterId });
+  return sendJson(res, 200, { matter, items });
+}
+
+function matterExportApi(req, res, user, url) {
+  if (!["admin", "lawyer"].includes(user.role)) return sendJson(res, 403, { error: "Permisos insuficientes" });
+  const matterId = url.pathname.split("/")[3];
+  const matter = store.matters.find((item) => item.id === matterId);
+  if (!matter) return sendJson(res, 404, { error: "Expediente no encontrado" });
+  const payload = {
+    exportedAt: nowIso(),
+    matter,
+    client: store.clients.find((item) => item.id === matter.clientId) || null,
+    tasks: store.tasks.filter((item) => item.matterId === matterId),
+    notes: store.notes.filter((item) => item.matterId === matterId),
+    documents: store.documents.filter((item) => item.matterId === matterId),
+    events: store.events.filter((item) => item.matterId === matterId),
+    timeEntries: store.timeEntries.filter((item) => item.matterId === matterId),
+  };
+  audit("matters.export", user.id, { id: matterId });
+  res.writeHead(200, {
+    "Content-Type": "application/json; charset=utf-8",
+    "Content-Disposition": `attachment; filename="expediente-${matterId}.json"`,
+  });
+  res.end(JSON.stringify(payload, null, 2));
+}
+
 async function notesApi(req, res, user) {
   if (req.method === "GET") return sendJson(res, 200, { items: store.notes });
   if (req.method !== "POST") return sendJson(res, 405, { error: "Metodo no permitido" });
@@ -192,6 +260,7 @@ async function documentsApi(req, res, user) {
     clientId: body.clientId || "",
     name: String(body.name || "documento").slice(0, 180),
     mimeType: String(body.mimeType || "application/octet-stream").slice(0, 120),
+    category: text(body.category || "General", 80),
     size: buffer.length,
     sha256: crypto.createHash("sha256").update(buffer).digest("hex"),
     createdAt: nowIso(),
@@ -237,6 +306,14 @@ function sanitizeRecord(key, body, userId) {
   if (key === "tasks") {
     return { ...base, title: text(body.title, 180), matterId: text(body.matterId, 80), dueDate: text(body.dueDate, 30), priority: text(body.priority || "media", 40), status: "open" };
   }
+  if (key === "events") {
+    return { ...base, title: text(body.title, 180), matterId: text(body.matterId, 80), date: text(body.date, 30), kind: text(body.kind || "plazo", 80), location: text(body.location, 160), status: text(body.status || "previsto", 60), notes: text(body.notes, 1000) };
+  }
+  if (key === "timeEntries") {
+    const minutes = Math.max(0, Math.min(24 * 60, Number(body.minutes || 0)));
+    const rate = Math.max(0, Math.min(9999, Number(body.rate || 0)));
+    return { ...base, matterId: text(body.matterId, 80), date: text(body.date, 30), concept: text(body.concept, 220), minutes, rate, billable: body.billable !== "no" };
+  }
   if (key === "notes") {
     return { ...base, matterId: text(body.matterId, 80), clientId: text(body.clientId, 80), body: text(body.body, 5000) };
   }
@@ -244,23 +321,46 @@ function sanitizeRecord(key, body, userId) {
 }
 
 function summary() {
+  const today = new Date().toISOString().slice(0, 10);
+  const upcomingEvents = store.events
+    .filter((item) => !item.date || item.date >= today)
+    .sort((a, b) => String(a.date).localeCompare(String(b.date)))
+    .slice(0, 8);
+  const billableMinutes = store.timeEntries.filter((item) => item.billable).reduce((sum, item) => sum + Number(item.minutes || 0), 0);
   return {
     clients: store.clients.length,
     matters: store.matters.length,
     openTasks: store.tasks.filter((item) => item.status !== "done").length,
     documents: store.documents.length,
+    events: store.events.length,
+    billableHours: Math.round((billableMinutes / 60) * 10) / 10,
     recentMatters: store.matters.slice(0, 5),
     dueTasks: store.tasks.filter((item) => item.status !== "done").slice(0, 8),
+    upcomingEvents,
   };
 }
 
 function loadStore() {
   if (!fs.existsSync(STORE_FILE)) {
-    const empty = { clients: [], matters: [], tasks: [], notes: [], documents: [], version: 1 };
+    const empty = normalizeStore({});
     writeEncryptedJson(STORE_FILE, empty);
     return empty;
   }
-  return readEncryptedJson(STORE_FILE);
+  return normalizeStore(readEncryptedJson(STORE_FILE));
+}
+
+function normalizeStore(data) {
+  return {
+    clients: Array.isArray(data.clients) ? data.clients : [],
+    matters: Array.isArray(data.matters) ? data.matters : [],
+    tasks: Array.isArray(data.tasks) ? data.tasks : [],
+    notes: Array.isArray(data.notes) ? data.notes : [],
+    documents: Array.isArray(data.documents) ? data.documents : [],
+    events: Array.isArray(data.events) ? data.events : [],
+    timeEntries: Array.isArray(data.timeEntries) ? data.timeEntries : [],
+    savedAt: data.savedAt || nowIso(),
+    version: 2,
+  };
 }
 
 function saveStore() {
@@ -417,6 +517,42 @@ function parseCookies(req) {
     acc[rawKey] = decodeURIComponent(rest.join("="));
     return acc;
   }, {});
+}
+
+function loginAttemptKey(req, email) {
+  return `${req.socket.remoteAddress || "local"}:${email}`;
+}
+
+function loginBucket(req, email) {
+  const key = loginAttemptKey(req, email);
+  const bucket = loginAttempts.get(key) || { count: 0, blockedUntil: 0 };
+  if (bucket.blockedUntil < Date.now() && bucket.count > 0) bucket.count = Math.max(0, bucket.count - 1);
+  return bucket;
+}
+
+function registerFailedLogin(req, email) {
+  const key = loginAttemptKey(req, email);
+  const bucket = loginBucket(req, email);
+  bucket.count += 1;
+  if (bucket.count >= 6) bucket.blockedUntil = Date.now() + 15 * 60 * 1000;
+  loginAttempts.set(key, bucket);
+}
+
+function clientName(clientId) {
+  return store.clients.find((item) => item.id === clientId)?.name || "";
+}
+
+function matterTitle(matterId) {
+  return store.matters.find((item) => item.id === matterId)?.title || "";
+}
+
+function minutesLabel(minutes) {
+  const value = Number(minutes || 0);
+  return `${Math.floor(value / 60)}h ${value % 60}m`;
+}
+
+function timelineItem(type, date, title, idValue) {
+  return { type, date, title, id: idValue };
 }
 
 function ensureDirectories() {

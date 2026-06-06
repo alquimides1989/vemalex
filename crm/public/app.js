@@ -1,5 +1,5 @@
 let csrfToken = "";
-let state = { clients: [], matters: [], tasks: [], documents: [] };
+let state = { clients: [], matters: [], tasks: [], documents: [], events: [], timeEntries: [] };
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
@@ -27,9 +27,12 @@ function bindEvents() {
   });
 
   $$("[data-view-button]").forEach((button) => button.addEventListener("click", () => setView(button.dataset.viewButton)));
+  $("[data-search-form]").addEventListener("submit", search);
   $("[data-client-form]").addEventListener("submit", submitForm("/api/clients", "clients"));
   $("[data-matter-form]").addEventListener("submit", submitForm("/api/matters", "matters"));
   $("[data-task-form]").addEventListener("submit", submitForm("/api/tasks", "tasks"));
+  $("[data-event-form]").addEventListener("submit", submitForm("/api/events", "events"));
+  $("[data-time-form]").addEventListener("submit", submitForm("/api/time-entries", "timeEntries"));
   $("[data-document-form]").addEventListener("submit", uploadDocument);
 }
 
@@ -42,21 +45,27 @@ async function showApp(result) {
 }
 
 async function refreshAll() {
-  const [summary, clients, matters, tasks, documents] = await Promise.all([
+  const [summary, clients, matters, tasks, documents, events, timeEntries] = await Promise.all([
     api("/api/summary"),
     api("/api/clients"),
     api("/api/matters"),
     api("/api/tasks"),
     api("/api/documents"),
+    api("/api/events"),
+    api("/api/time-entries"),
   ]);
   state.clients = clients.items || [];
   state.matters = matters.items || [];
   state.tasks = tasks.items || [];
   state.documents = documents.items || [];
+  state.events = events.items || [];
+  state.timeEntries = timeEntries.items || [];
   renderSummary(summary);
   renderClients();
   renderMatters();
   renderTasks();
+  renderEvents();
+  renderTimeEntries();
   renderDocuments();
   renderSelects();
 }
@@ -67,9 +76,12 @@ function renderSummary(summary) {
     ["Expedientes", summary.matters],
     ["Tareas abiertas", summary.openTasks],
     ["Documentos", summary.documents],
-  ].map(([label, value]) => `<div class="stat"><strong>${value}</strong><span>${label}</span></div>`).join("");
+    ["Horas facturables", summary.billableHours || 0],
+  ].map(([label, value]) => `<div class="stat"><strong>${esc(value)}</strong><span>${esc(label)}</span></div>`).join("");
   $("[data-recent-matters]").innerHTML = list(summary.recentMatters || [], (item) => `<strong>${esc(item.title)}</strong><span>${esc(item.type)} · ${esc(item.status)}</span>`);
   $("[data-due-tasks]").innerHTML = list(summary.dueTasks || [], (item) => `<strong>${esc(item.title)}</strong><span>${esc(item.dueDate || "Sin fecha")} · ${esc(item.priority)}</span>`);
+  $("[data-upcoming-events]").innerHTML = list(summary.upcomingEvents || [], (item) => `<strong>${esc(item.title)}</strong><span>${esc(item.date || "Sin fecha")} · ${esc(item.kind)} · ${esc(matterTitle(item.matterId))}</span>`);
+  $("[data-billing-summary]").innerHTML = `<div class="list"><div class="item"><strong>${esc(summary.billableHours || 0)} horas facturables</strong><span>Tiempo registrado como facturable en expedientes</span></div><div class="item"><strong>${esc(state.timeEntries.length)} registros</strong><span>Control interno de dedicación del despacho</span></div></div>`;
 }
 
 function renderClients() {
@@ -77,10 +89,11 @@ function renderClients() {
 }
 
 function renderMatters() {
-  $("[data-matters]").innerHTML = list(state.matters, (item) => {
+  $("[data-matters]").innerHTML = `<div class="list">${state.matters.map((item) => {
     const client = state.clients.find((c) => c.id === item.clientId);
-    return `<strong>${esc(item.title)}</strong><span>${esc(client?.name || "Sin cliente")} · ${esc(item.type)} · riesgo ${esc(item.risk)}</span><span>${esc(item.nextStep)}</span>`;
-  });
+    return `<div class="item"><strong>${esc(item.title)}</strong><span>${esc(client?.name || "Sin cliente")} · ${esc(item.type)} · riesgo ${esc(item.risk)}</span><span>${esc(item.nextStep)}</span><div class="item-actions"><button data-timeline="${item.id}">Ver historial</button><a href="/api/matters/${item.id}/export">Exportar</a></div></div>`;
+  }).join("") || "<p class='meta'>Sin registros</p>"}</div>`;
+  $$("[data-timeline]").forEach((button) => button.addEventListener("click", () => loadTimeline(button.dataset.timeline)));
 }
 
 function renderTasks() {
@@ -91,15 +104,27 @@ function renderTasks() {
   }));
 }
 
+function renderEvents() {
+  const ordered = [...state.events].sort((a, b) => String(a.date).localeCompare(String(b.date)));
+  $("[data-events]").innerHTML = list(ordered, (item) => `<strong>${esc(item.title)}</strong><span>${esc(item.date || "Sin fecha")} · ${esc(item.kind)} · ${esc(matterTitle(item.matterId))}</span><span>${esc(item.location)} ${esc(item.notes)}</span>`);
+}
+
+function renderTimeEntries() {
+  $("[data-time-entries]").innerHTML = list(state.timeEntries, (item) => {
+    const amount = Number(item.rate || 0) && Number(item.minutes || 0) ? ` · ${Math.round((Number(item.minutes) / 60) * Number(item.rate))} EUR` : "";
+    return `<strong>${esc(item.concept)}</strong><span>${esc(item.date || "Sin fecha")} · ${esc(matterTitle(item.matterId))} · ${minutesLabel(item.minutes)}${esc(amount)}</span><span>${item.billable ? "Facturable" : "No facturable"}</span>`;
+  });
+}
+
 function renderDocuments() {
-  $("[data-documents]").innerHTML = `<div class="list">${state.documents.map((item) => `<div class="item"><strong>${esc(item.name)}</strong><span>${Math.round(item.size / 1024)} KB · ${esc(item.createdAt)}</span><div class="item-actions"><a href="/api/documents/${item.id}">Descargar</a></div></div>`).join("") || "<p class='meta'>Sin registros</p>"}</div>`;
+  $("[data-documents]").innerHTML = `<div class="list">${state.documents.map((item) => `<div class="item"><strong>${esc(item.name)}</strong><span>${esc(item.category || "General")} · ${Math.round(item.size / 1024)} KB · ${esc(item.createdAt)}</span><div class="item-actions"><a href="/api/documents/${item.id}">Descargar</a></div></div>`).join("") || "<p class='meta'>Sin registros</p>"}</div>`;
 }
 
 function renderSelects() {
   const clientOptions = `<option value="">Cliente</option>${state.clients.map((item) => `<option value="${item.id}">${esc(item.name)}</option>`).join("")}`;
   $$("[data-client-select]").forEach((select) => select.innerHTML = clientOptions);
   const matterOptions = `<option value="">Expediente</option>${state.matters.map((item) => `<option value="${item.id}">${esc(item.title)}</option>`).join("")}`;
-  $$("[data-matter-select], [data-document-matter-select]").forEach((select) => select.innerHTML = matterOptions);
+  $$("[data-matter-select], [data-document-matter-select], [data-event-matter-select], [data-time-matter-select]").forEach((select) => select.innerHTML = matterOptions);
 }
 
 function submitForm(url, view) {
@@ -118,15 +143,29 @@ async function uploadDocument(event) {
   const file = form.file.files[0];
   if (!file) return;
   const contentBase64 = await fileToBase64(file);
-  await api("/api/documents", { method: "POST", body: { matterId: form.matterId.value, name: file.name, mimeType: file.type, contentBase64 } });
+  await api("/api/documents", { method: "POST", body: { matterId: form.matterId.value, category: form.category.value, name: file.name, mimeType: file.type, contentBase64 } });
   form.reset();
   await refreshAll();
+}
+
+async function search(event) {
+  event.preventDefault();
+  const q = event.target.q.value.trim();
+  const result = await api(`/api/search?q=${encodeURIComponent(q)}`);
+  $("[data-search-results]").innerHTML = list(result.items || [], (item) => `<strong>${esc(item.type)} · ${esc(item.title)}</strong><span>${esc(item.subtitle)}</span>`);
+}
+
+async function loadTimeline(matterId) {
+  const result = await api(`/api/matters/${matterId}/timeline`);
+  $("[data-timeline-panel]").classList.remove("hidden");
+  $("[data-timeline-title]").textContent = `Historial · ${result.matter?.title || "Expediente"}`;
+  $("[data-timeline]").innerHTML = list(result.items || [], (item) => `<strong>${esc(item.type)} · ${esc(item.title)}</strong><span>${esc(item.date || "Sin fecha")}</span>`);
 }
 
 function setView(view) {
   $$("[data-view]").forEach((el) => el.classList.toggle("hidden", el.dataset.view !== view));
   $$("[data-view-button]").forEach((el) => el.classList.toggle("active", el.dataset.viewButton === view));
-  $("[data-view-title]").textContent = { dashboard: "Panel", clients: "Clientes", matters: "Expedientes", tasks: "Tareas", documents: "Documentos", audit: "Auditoría" }[view] || "Panel";
+  $("[data-view-title]").textContent = { dashboard: "Panel", search: "Búsqueda global", clients: "Clientes", matters: "Expedientes", tasks: "Tareas", events: "Calendario", timeEntries: "Tiempos", documents: "Documentos", audit: "Auditoría" }[view] || "Panel";
   if (view === "audit") loadAudit();
 }
 
@@ -158,6 +197,15 @@ function fileToBase64(file) {
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
+}
+
+function matterTitle(matterId) {
+  return state.matters.find((item) => item.id === matterId)?.title || "Sin expediente";
+}
+
+function minutesLabel(minutes) {
+  const value = Number(minutes || 0);
+  return `${Math.floor(value / 60)}h ${value % 60}m`;
 }
 
 function esc(value) {

@@ -10,6 +10,7 @@
     <main id="app">
       <section class="login-view" data-login>
         <form class="login-card" data-login-form>
+          <img class="login-logo" src="logo-vemalex.png" alt="VEMALEX Abogados" />
           <p class="eyebrow">VEMALEX CRM</p>
           <h1>Acceso privado</h1>
           <label>Email <input name="email" type="email" autocomplete="username" required /></label>
@@ -22,14 +23,17 @@
       <section class="shell hidden" data-shell>
         <aside class="sidebar">
           <div class="brand">
-            <strong>VEMALEX</strong>
+            <img src="logo-vemalex.png" alt="VEMALEX Abogados" />
             <span>Gestión interna</span>
           </div>
           <nav>
             <button data-view-button="dashboard" class="active">Panel</button>
+            <button data-view-button="search">Búsqueda global</button>
             <button data-view-button="clients">Clientes</button>
             <button data-view-button="matters">Expedientes</button>
             <button data-view-button="tasks">Tareas</button>
+            <button data-view-button="events">Calendario</button>
+            <button data-view-button="timeEntries">Tiempos</button>
             <button data-view-button="documents">Documentos</button>
             <button data-view-button="audit">Auditoría</button>
           </nav>
@@ -56,7 +60,26 @@
                 <h3>Tareas abiertas</h3>
                 <div data-due-tasks></div>
               </article>
+              <article class="panel">
+                <h3>Próximos plazos y citas</h3>
+                <div data-upcoming-events></div>
+              </article>
+              <article class="panel">
+                <h3>Control económico</h3>
+                <div data-billing-summary></div>
+              </article>
             </div>
+          </section>
+
+          <section class="view hidden" data-view="search">
+            <article class="panel">
+              <h3>Búsqueda global y control de conflictos</h3>
+              <form class="search-box" data-search-form>
+                <input name="q" placeholder="Buscar por cliente, DNI, teléfono, expediente, juzgado, documento..." autocomplete="off" />
+                <button type="submit">Buscar</button>
+              </form>
+              <div data-search-results></div>
+            </article>
           </section>
 
           <section class="view hidden" data-view="clients">
@@ -92,6 +115,10 @@
               </form>
             </article>
             <article class="panel"><h3>Expedientes</h3><div data-matters></div></article>
+            <article class="panel hidden" data-timeline-panel>
+              <h3 data-timeline-title>Historial del expediente</h3>
+              <div data-timeline></div>
+            </article>
           </section>
 
           <section class="view hidden" data-view="tasks">
@@ -108,11 +135,49 @@
             <article class="panel"><h3>Tareas</h3><div data-tasks></div></article>
           </section>
 
+          <section class="view hidden" data-view="events">
+            <article class="panel">
+              <h3>Nuevo plazo o cita</h3>
+              <form class="form-grid" data-event-form>
+                <input name="title" placeholder="Título" required />
+                <select name="matterId" data-event-matter-select></select>
+                <input name="date" type="date" required />
+                <select name="kind">
+                  <option value="plazo">Plazo procesal</option>
+                  <option value="cita">Cita con cliente</option>
+                  <option value="vista">Vista / juicio</option>
+                  <option value="recordatorio">Recordatorio</option>
+                </select>
+                <input name="location" placeholder="Lugar o canal" />
+                <textarea name="notes" placeholder="Notas"></textarea>
+                <button type="submit">Guardar en calendario</button>
+              </form>
+            </article>
+            <article class="panel"><h3>Calendario</h3><div data-events></div></article>
+          </section>
+
+          <section class="view hidden" data-view="timeEntries">
+            <article class="panel">
+              <h3>Nuevo tiempo de trabajo</h3>
+              <form class="form-grid" data-time-form>
+                <select name="matterId" data-time-matter-select></select>
+                <input name="date" type="date" required />
+                <input name="concept" placeholder="Concepto: reunión, escrito, llamada..." required />
+                <input name="minutes" type="number" min="0" step="15" placeholder="Minutos" required />
+                <input name="rate" type="number" min="0" step="1" placeholder="Tarifa hora opcional" />
+                <select name="billable"><option value="yes">Facturable</option><option value="no">No facturable</option></select>
+                <button type="submit">Registrar tiempo</button>
+              </form>
+            </article>
+            <article class="panel"><h3>Tiempos y facturación</h3><div data-time-entries></div></article>
+          </section>
+
           <section class="view hidden" data-view="documents">
             <article class="panel">
               <h3>Subir documento cifrado</h3>
               <form class="form-grid" data-document-form>
                 <select name="matterId" data-document-matter-select></select>
+                <input name="category" placeholder="Categoría: demanda, sentencia, poder..." />
                 <input name="file" type="file" required />
                 <button type="submit">Cifrar y guardar</button>
               </form>
