@@ -18,7 +18,7 @@ No publiques esta carpeta como web publica de Cloudflare Pages. Este CRM debe ej
 - Busqueda global y control inicial de conflictos.
 - Calendario mensual funcional de plazos, citas, vistas y recordatorios.
 - Registro de tiempos y control facturable.
-- Envio de correos con Gmail mediante credenciales privadas en `.env`.
+- Envio de correos por SMTP mediante credenciales privadas en `.env`.
 - Asistente ChatGPT interno mediante OpenAI API.
 - Perfiles IA configurables para replicar instrucciones de GPTs personalizados.
 - Exportacion a Excel de clientes, expedientes, tareas, agenda, tiempos, documentos, correos y expediente individual.
@@ -66,21 +66,23 @@ CRM_HOST=127.0.0.1
 
 No uses `0.0.0.0` salvo que quieras permitir acceso desde otros equipos de la red local.
 
-## Gmail
+## Correo SMTP
 
-Para enviar correos desde el CRM con Gmail:
+Para enviar correos desde el CRM puedes usar Gmail con contrasena de aplicacion o un proveedor SMTP externo como Brevo, SendGrid o Mailgun.
 
-1. Activa la verificacion en dos pasos en la cuenta de Google.
-2. Crea una contrasena de aplicacion para correo.
-3. Rellena en `.env`:
+Configuracion en `.env`:
 
 ```text
-GMAIL_USER=tu-cuenta@gmail.com
-GMAIL_APP_PASSWORD=contrasena-de-aplicacion
-MAIL_FROM=tu-cuenta@gmail.com
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=465
+SMTP_USER=info@vemalex.com
+SMTP_PASSWORD=contrasena-smtp-o-app-password
+MAIL_FROM=info@vemalex.com
 ```
 
-No guardes la contrasena de Gmail normal. Google recomienda usar contrasena de aplicacion u OAuth para este tipo de integraciones.
+Si Google no permite crear contrasena de aplicacion para `info@vemalex.com`, usa un proveedor SMTP externo y verifica el dominio/remitente.
+
+No guardes la contrasena normal de Gmail.
 
 ## ChatGPT / OpenAI
 

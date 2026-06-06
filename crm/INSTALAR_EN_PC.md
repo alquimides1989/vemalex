@@ -41,17 +41,19 @@ CRM_HOST=127.0.0.1
 
 Asi no queda publicado en internet ni accesible desde otros dispositivos de la red. Los datos se guardan cifrados en `crm/data/store.enc`.
 
-## Gmail
+## Correo SMTP
 
-El envio de correos se configura en `.env` con una contrasena de aplicacion de Google:
+El envio de correos se configura en `.env`:
 
 ```text
-GMAIL_USER=
-GMAIL_APP_PASSWORD=
+SMTP_HOST=
+SMTP_PORT=465
+SMTP_USER=
+SMTP_PASSWORD=
 MAIL_FROM=info@vemalex.com
 ```
 
-La contrasena no se sube al repositorio.
+Si Gmail no permite contrasena de aplicacion, usa un proveedor SMTP externo. La contrasena no se sube al repositorio.
 
 ## OpenAI
 

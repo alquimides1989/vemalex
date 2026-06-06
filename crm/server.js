@@ -26,6 +26,10 @@ const CONFIG = {
   secureCookie: process.env.CRM_COOKIE_SECURE === "true",
   gmailUser: process.env.GMAIL_USER || "",
   gmailAppPassword: process.env.GMAIL_APP_PASSWORD || "",
+  smtpHost: process.env.SMTP_HOST || "smtp.gmail.com",
+  smtpPort: Number(process.env.SMTP_PORT || 465),
+  smtpUser: process.env.SMTP_USER || process.env.GMAIL_USER || "",
+  smtpPassword: process.env.SMTP_PASSWORD || process.env.GMAIL_APP_PASSWORD || "",
   mailFrom: process.env.MAIL_FROM || process.env.GMAIL_USER || "info@vemalex.com",
   openaiApiKey: process.env.OPENAI_API_KEY || "",
   openaiModel: process.env.OPENAI_MODEL || "gpt-5-mini",
@@ -196,7 +200,7 @@ async function tasksApi(req, res, user) {
 
 async function sendEmailApi(req, res, user) {
   if (!["admin", "lawyer", "staff"].includes(user.role)) return sendJson(res, 403, { error: "Permisos insuficientes" });
-  if (!CONFIG.gmailUser || !CONFIG.gmailAppPassword) return sendJson(res, 400, { error: "Gmail no configurado. Revisa GMAIL_USER y GMAIL_APP_PASSWORD en .env" });
+  if (!CONFIG.smtpUser || !CONFIG.smtpPassword) return sendJson(res, 400, { error: "Correo no configurado. Revisa SMTP_USER y SMTP_PASSWORD en .env" });
   const body = await readJson(req, 256 * 1024);
   const to = text(body.to, 240);
   const subject = text(body.subject, 240);
@@ -933,10 +937,10 @@ function parseCookies(req) {
 function sendGmail({ to, subject, message }) {
   const email = buildEmail({ from: CONFIG.mailFrom, to, subject, message });
   return smtpSend({
-    host: "smtp.gmail.com",
-    port: 465,
-    user: CONFIG.gmailUser,
-    password: CONFIG.gmailAppPassword,
+    host: CONFIG.smtpHost,
+    port: CONFIG.smtpPort,
+    user: CONFIG.smtpUser,
+    password: CONFIG.smtpPassword,
     mailFrom: CONFIG.mailFrom,
     rcptTo: to,
     data: email,
