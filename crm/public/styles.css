@@ -60,6 +60,7 @@ button, .button {
   background: var(--navy);
   font-weight: 800;
 }
+.secondary-action { margin-top: 12px; color: var(--navy); background: #efe7dc; }
 
 .message { min-height: 22px; color: var(--danger); }
 .shell { display: grid; grid-template-columns: 260px minmax(0, 1fr); min-height: 100vh; }

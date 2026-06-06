@@ -38,6 +38,7 @@ function bindEvents() {
   $("[data-ai-form]").addEventListener("submit", askAi);
   $("[data-ai-profile-form]").addEventListener("submit", saveAiProfile);
   $("[data-ai-settings-form]").addEventListener("submit", saveAiSettings);
+  $("[data-ai-test]").addEventListener("click", testAiConnection);
   $("[data-calendar-prev]").addEventListener("click", () => moveCalendar(-1));
   $("[data-calendar-next]").addEventListener("click", () => moveCalendar(1));
   $("[data-email-client-select]").addEventListener("change", fillEmailFromClient);
@@ -247,6 +248,12 @@ async function saveAiSettings(event) {
   event.target.apiKey.value = "";
   state.aiSettings = result;
   renderAiSettings();
+}
+
+async function testAiConnection() {
+  $("[data-ai-settings-status]").textContent = "Probando conexion con OpenAI...";
+  const result = await api("/api/ai/test", { method: "POST", body: {}, silent: true });
+  $("[data-ai-settings-status]").textContent = result?.error || "Conexion con OpenAI correcta.";
 }
 
 function renderAiSettings() {

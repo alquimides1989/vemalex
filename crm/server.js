@@ -99,6 +99,7 @@ async function handleApi(req, res, url) {
   if (url.pathname === "/api/email/log" && req.method === "GET") return sendJson(res, 200, { items: store.emailLog });
   if (url.pathname === "/api/ai/profiles") return aiProfilesApi(req, res, user);
   if (url.pathname === "/api/ai/settings") return aiSettingsApi(req, res, user);
+  if (url.pathname === "/api/ai/test" && req.method === "POST") return aiTestApi(req, res, user);
   if (url.pathname === "/api/ai/chat" && req.method === "POST") return aiChatApi(req, res, user);
   if (url.pathname === "/api/ai/log" && req.method === "GET") return sendJson(res, 200, { items: store.aiLog });
   if (url.pathname === "/api/notes") return notesApi(req, res, user);
@@ -269,7 +270,20 @@ async function aiChatApi(req, res, user) {
     return sendJson(res, 200, { answer, profile });
   } catch (error) {
     audit("ai.failed", user.id, { error: error.message });
-    return sendJson(res, 502, { error: "No se pudo consultar OpenAI" });
+    return sendJson(res, 502, { error: `OpenAI: ${publicOpenAiError(error.message)}` });
+  }
+}
+
+async function aiTestApi(req, res, user) {
+  if (!["admin", "lawyer"].includes(user.role)) return sendJson(res, 403, { error: "Solo administracion o letrado" });
+  if (!getOpenAiApiKey()) return sendJson(res, 400, { error: "OpenAI no configurado. Pega tu API key primero." });
+  try {
+    const answer = await openaiResponse({ instructions: "Responde solo con OK.", input: "Prueba de conexion" });
+    audit("ai.test", user.id, { ok: true });
+    return sendJson(res, 200, { ok: true, answer });
+  } catch (error) {
+    audit("ai.test.failed", user.id, { error: error.message });
+    return sendJson(res, 502, { error: `OpenAI: ${publicOpenAiError(error.message)}` });
   }
 }
 
@@ -766,6 +780,21 @@ function getOpenAiModel() {
 function maskSecret(value) {
   if (!value) return "";
   return `${value.slice(0, 7)}...${value.slice(-4)}`;
+}
+
+function publicOpenAiError(message) {
+  const clean = String(message || "error desconocido");
+  const lower = clean.toLowerCase();
+  if (lower.includes("quota") || lower.includes("billing")) {
+    return "cuota agotada o facturacion no activa. Revisa saldo, plan y billing del proyecto en platform.openai.com.";
+  }
+  if (lower.includes("incorrect api key") || lower.includes("invalid api key") || lower.includes("401")) {
+    return "API key no valida. Copia una clave nueva del proyecto correcto.";
+  }
+  if (lower.includes("model") && (lower.includes("not found") || lower.includes("does not exist"))) {
+    return "modelo no disponible para esta cuenta. Prueba con otro modelo configurado.";
+  }
+  return clean.slice(0, 260);
 }
 
 function extractOpenAiText(response) {
