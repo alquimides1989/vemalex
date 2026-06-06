@@ -1,0 +1,445 @@
+const crypto = require("crypto");
+const fs = require("fs");
+const http = require("http");
+const path = require("path");
+const { URL } = require("url");
+
+const ROOT = __dirname;
+const PUBLIC_DIR = path.join(ROOT, "public");
+const DATA_DIR = path.join(ROOT, "data");
+const DOC_DIR = path.join(DATA_DIR, "documents");
+const STORE_FILE = path.join(DATA_DIR, "store.enc");
+const USER_FILE = path.join(DATA_DIR, "users.json");
+const AUDIT_FILE = path.join(DATA_DIR, "audit.jsonl");
+
+loadEnv(path.join(ROOT, ".env"));
+
+const CONFIG = {
+  host: process.env.CRM_HOST || "127.0.0.1",
+  port: Number(process.env.CRM_PORT || 8787),
+  masterKey: process.env.CRM_MASTER_KEY || "",
+  adminEmail: process.env.CRM_ADMIN_EMAIL || "info@vemalex.com",
+  adminPassword: process.env.CRM_ADMIN_PASSWORD || "",
+  secureCookie: process.env.CRM_COOKIE_SECURE === "true",
+};
+
+if (CONFIG.masterKey.length < 32) {
+  console.error("CRM_MASTER_KEY debe tener al menos 32 caracteres.");
+  process.exit(1);
+}
+
+ensureDirectories();
+
+const sessions = new Map();
+const encryptionKey = crypto.createHash("sha256").update(CONFIG.masterKey).digest();
+
+initUsers();
+let store = loadStore();
+
+const server = http.createServer(async (req, res) => {
+  try {
+    applySecurityHeaders(res);
+    if (req.method === "OPTIONS") return sendNoContent(res);
+
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    if (url.pathname.startsWith("/api/")) return handleApi(req, res, url);
+    return serveStatic(req, res, url);
+  } catch (error) {
+    console.error(error);
+    sendJson(res, 500, { error: "Error interno" });
+  }
+});
+
+server.listen(CONFIG.port, CONFIG.host, () => {
+  console.log(`VEMALEX CRM disponible en http://${CONFIG.host}:${CONFIG.port}`);
+});
+
+async function handleApi(req, res, url) {
+  if (url.pathname === "/api/login" && req.method === "POST") return login(req, res);
+
+  const session = getSession(req);
+  if (!session) return sendJson(res, 401, { error: "No autenticado" });
+
+  if (req.method !== "GET" && req.method !== "HEAD") {
+    const csrf = req.headers["x-csrf-token"];
+    if (!csrf || csrf !== session.csrf) return sendJson(res, 403, { error: "CSRF invalido" });
+  }
+
+  const user = getUserById(session.userId);
+  if (!user || user.disabled) return sendJson(res, 401, { error: "Usuario no valido" });
+
+  if (url.pathname === "/api/me" && req.method === "GET") {
+    return sendJson(res, 200, { user: publicUser(user), csrfToken: session.csrf });
+  }
+  if (url.pathname === "/api/logout" && req.method === "POST") {
+    sessions.delete(session.token);
+    res.setHeader("Set-Cookie", cookie("crm_session", "", { maxAge: 0 }));
+    return sendJson(res, 200, { ok: true });
+  }
+  if (url.pathname === "/api/summary" && req.method === "GET") return sendJson(res, 200, summary());
+
+  if (url.pathname === "/api/users") return usersApi(req, res, user);
+  if (url.pathname === "/api/clients") return collectionApi(req, res, user, "clients", ["admin", "lawyer", "staff"]);
+  if (url.pathname === "/api/matters") return collectionApi(req, res, user, "matters", ["admin", "lawyer", "staff"]);
+  if (url.pathname === "/api/tasks") return tasksApi(req, res, user);
+  if (url.pathname === "/api/notes") return notesApi(req, res, user);
+  if (url.pathname === "/api/documents") return documentsApi(req, res, user);
+  if (url.pathname.startsWith("/api/documents/") && req.method === "GET") return downloadDocument(req, res, user, url);
+  if (url.pathname === "/api/audit" && req.method === "GET") return auditApi(req, res, user);
+
+  return sendJson(res, 404, { error: "Ruta no encontrada" });
+}
+
+async function login(req, res) {
+  const body = await readJson(req);
+  const email = String(body.email || "").trim().toLowerCase();
+  const password = String(body.password || "");
+  const user = getUsers().find((item) => item.email === email && !item.disabled);
+  if (!user || !verifyPassword(password, user.password)) {
+    audit("auth.failed", null, { email });
+    return sendJson(res, 401, { error: "Credenciales incorrectas" });
+  }
+
+  const token = crypto.randomBytes(32).toString("hex");
+  const csrf = crypto.randomBytes(24).toString("hex");
+  sessions.set(token, { token, csrf, userId: user.id, createdAt: nowIso(), lastSeen: Date.now() });
+  audit("auth.login", user.id, { email });
+  res.setHeader("Set-Cookie", cookie("crm_session", token, { httpOnly: true, sameSite: "Strict", secure: CONFIG.secureCookie, maxAge: 60 * 60 * 8 }));
+  return sendJson(res, 200, { user: publicUser(user), csrfToken: csrf });
+}
+
+async function usersApi(req, res, user) {
+  if (user.role !== "admin") return sendJson(res, 403, { error: "Solo administracion" });
+  if (req.method === "GET") return sendJson(res, 200, { items: getUsers().map(publicUser) });
+  if (req.method !== "POST") return sendJson(res, 405, { error: "Metodo no permitido" });
+
+  const body = await readJson(req);
+  const email = String(body.email || "").trim().toLowerCase();
+  const role = ["admin", "lawyer", "staff", "read_only"].includes(body.role) ? body.role : "staff";
+  const password = String(body.password || "");
+  if (!email || password.length < 12) return sendJson(res, 400, { error: "Email y password minima de 12 caracteres" });
+  const users = getUsers();
+  if (users.some((item) => item.email === email)) return sendJson(res, 409, { error: "Usuario existente" });
+  const created = { id: id("usr"), email, name: body.name || email, role, password: hashPassword(password), disabled: false, createdAt: nowIso() };
+  users.push(created);
+  saveUsers(users);
+  audit("user.create", user.id, { target: created.id, role });
+  return sendJson(res, 201, { item: publicUser(created) });
+}
+
+async function collectionApi(req, res, user, key, roles) {
+  if (!roles.includes(user.role)) return sendJson(res, 403, { error: "Permisos insuficientes" });
+  if (req.method === "GET") {
+    const q = String(new URL(req.url, "http://x").searchParams.get("q") || "").toLowerCase();
+    const items = store[key].filter((item) => JSON.stringify(item).toLowerCase().includes(q));
+    return sendJson(res, 200, { items });
+  }
+  if (req.method !== "POST") return sendJson(res, 405, { error: "Metodo no permitido" });
+  const body = await readJson(req);
+  const item = sanitizeRecord(key, body, user.id);
+  store[key].unshift(item);
+  saveStore();
+  audit(`${key}.create`, user.id, { id: item.id });
+  return sendJson(res, 201, { item });
+}
+
+async function tasksApi(req, res, user) {
+  if (req.method === "GET") return sendJson(res, 200, { items: store.tasks });
+  if (req.method === "POST") {
+    const body = await readJson(req);
+    const item = sanitizeRecord("tasks", body, user.id);
+    store.tasks.unshift(item);
+    saveStore();
+    audit("tasks.create", user.id, { id: item.id });
+    return sendJson(res, 201, { item });
+  }
+  if (req.method === "PATCH") {
+    const body = await readJson(req);
+    const item = store.tasks.find((task) => task.id === body.id);
+    if (!item) return sendJson(res, 404, { error: "Tarea no encontrada" });
+    item.status = body.status === "done" ? "done" : "open";
+    item.updatedAt = nowIso();
+    saveStore();
+    audit("tasks.update", user.id, { id: item.id, status: item.status });
+    return sendJson(res, 200, { item });
+  }
+  return sendJson(res, 405, { error: "Metodo no permitido" });
+}
+
+async function notesApi(req, res, user) {
+  if (req.method === "GET") return sendJson(res, 200, { items: store.notes });
+  if (req.method !== "POST") return sendJson(res, 405, { error: "Metodo no permitido" });
+  const body = await readJson(req);
+  const item = sanitizeRecord("notes", body, user.id);
+  store.notes.unshift(item);
+  saveStore();
+  audit("notes.create", user.id, { id: item.id, matterId: item.matterId });
+  return sendJson(res, 201, { item });
+}
+
+async function documentsApi(req, res, user) {
+  if (req.method === "GET") return sendJson(res, 200, { items: store.documents });
+  if (req.method !== "POST") return sendJson(res, 405, { error: "Metodo no permitido" });
+  const body = await readJson(req, 25 * 1024 * 1024);
+  const buffer = Buffer.from(String(body.contentBase64 || ""), "base64");
+  if (!buffer.length) return sendJson(res, 400, { error: "Documento vacio" });
+  const docId = id("doc");
+  const encrypted = encryptBuffer(buffer);
+  fs.writeFileSync(path.join(DOC_DIR, `${docId}.bin`), JSON.stringify(encrypted));
+  const item = {
+    id: docId,
+    matterId: body.matterId || "",
+    clientId: body.clientId || "",
+    name: String(body.name || "documento").slice(0, 180),
+    mimeType: String(body.mimeType || "application/octet-stream").slice(0, 120),
+    size: buffer.length,
+    sha256: crypto.createHash("sha256").update(buffer).digest("hex"),
+    createdAt: nowIso(),
+    createdBy: user.id,
+  };
+  store.documents.unshift(item);
+  saveStore();
+  audit("documents.upload", user.id, { id: item.id, matterId: item.matterId, size: item.size });
+  return sendJson(res, 201, { item });
+}
+
+function downloadDocument(req, res, user, url) {
+  const docId = path.basename(url.pathname);
+  const meta = store.documents.find((item) => item.id === docId);
+  if (!meta) return sendJson(res, 404, { error: "Documento no encontrado" });
+  const file = path.join(DOC_DIR, `${docId}.bin`);
+  if (!fs.existsSync(file)) return sendJson(res, 404, { error: "Archivo no encontrado" });
+  const encrypted = JSON.parse(fs.readFileSync(file, "utf8"));
+  const buffer = decryptBuffer(encrypted);
+  audit("documents.download", user.id, { id: docId });
+  res.writeHead(200, {
+    "Content-Type": meta.mimeType,
+    "Content-Disposition": `attachment; filename="${meta.name.replace(/"/g, "")}"`,
+    "Content-Length": buffer.length,
+  });
+  res.end(buffer);
+}
+
+function auditApi(req, res, user) {
+  if (user.role !== "admin") return sendJson(res, 403, { error: "Solo administracion" });
+  const lines = fs.existsSync(AUDIT_FILE) ? fs.readFileSync(AUDIT_FILE, "utf8").trim().split("\n").filter(Boolean) : [];
+  return sendJson(res, 200, { items: lines.slice(-300).map((line) => JSON.parse(line)).reverse() });
+}
+
+function sanitizeRecord(key, body, userId) {
+  const base = { id: id(key.slice(0, 3)), createdAt: nowIso(), updatedAt: nowIso(), createdBy: userId };
+  if (key === "clients") {
+    return { ...base, name: text(body.name, 160), dni: text(body.dni, 40), email: text(body.email, 160), phone: text(body.phone, 80), address: text(body.address, 240), tags: text(body.tags, 240), notes: text(body.notes, 2000) };
+  }
+  if (key === "matters") {
+    return { ...base, title: text(body.title, 180), clientId: text(body.clientId, 80), type: text(body.type, 120), status: text(body.status || "abierto", 80), court: text(body.court, 180), reference: text(body.reference, 120), risk: text(body.risk || "medio", 40), nextStep: text(body.nextStep, 400) };
+  }
+  if (key === "tasks") {
+    return { ...base, title: text(body.title, 180), matterId: text(body.matterId, 80), dueDate: text(body.dueDate, 30), priority: text(body.priority || "media", 40), status: "open" };
+  }
+  if (key === "notes") {
+    return { ...base, matterId: text(body.matterId, 80), clientId: text(body.clientId, 80), body: text(body.body, 5000) };
+  }
+  return base;
+}
+
+function summary() {
+  return {
+    clients: store.clients.length,
+    matters: store.matters.length,
+    openTasks: store.tasks.filter((item) => item.status !== "done").length,
+    documents: store.documents.length,
+    recentMatters: store.matters.slice(0, 5),
+    dueTasks: store.tasks.filter((item) => item.status !== "done").slice(0, 8),
+  };
+}
+
+function loadStore() {
+  if (!fs.existsSync(STORE_FILE)) {
+    const empty = { clients: [], matters: [], tasks: [], notes: [], documents: [], version: 1 };
+    writeEncryptedJson(STORE_FILE, empty);
+    return empty;
+  }
+  return readEncryptedJson(STORE_FILE);
+}
+
+function saveStore() {
+  store.savedAt = nowIso();
+  writeEncryptedJson(STORE_FILE, store);
+}
+
+function readEncryptedJson(file) {
+  return JSON.parse(decryptBuffer(JSON.parse(fs.readFileSync(file, "utf8"))).toString("utf8"));
+}
+
+function writeEncryptedJson(file, data) {
+  fs.writeFileSync(file, JSON.stringify(encryptBuffer(Buffer.from(JSON.stringify(data, null, 2)))));
+}
+
+function encryptBuffer(buffer) {
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv("aes-256-gcm", encryptionKey, iv);
+  const ciphertext = Buffer.concat([cipher.update(buffer), cipher.final()]);
+  return { v: 1, alg: "AES-256-GCM", iv: iv.toString("base64"), tag: cipher.getAuthTag().toString("base64"), data: ciphertext.toString("base64") };
+}
+
+function decryptBuffer(payload) {
+  const decipher = crypto.createDecipheriv("aes-256-gcm", encryptionKey, Buffer.from(payload.iv, "base64"));
+  decipher.setAuthTag(Buffer.from(payload.tag, "base64"));
+  return Buffer.concat([decipher.update(Buffer.from(payload.data, "base64")), decipher.final()]);
+}
+
+function initUsers() {
+  if (fs.existsSync(USER_FILE)) return;
+  if (!CONFIG.adminPassword || CONFIG.adminPassword.length < 12) {
+    console.error("CRM_ADMIN_PASSWORD debe tener al menos 12 caracteres en el primer arranque.");
+    process.exit(1);
+  }
+  const admin = { id: id("usr"), email: CONFIG.adminEmail.toLowerCase(), name: "Administracion VEMALEX", role: "admin", password: hashPassword(CONFIG.adminPassword), disabled: false, createdAt: nowIso() };
+  fs.writeFileSync(USER_FILE, JSON.stringify([admin], null, 2));
+}
+
+function getUsers() {
+  return JSON.parse(fs.readFileSync(USER_FILE, "utf8"));
+}
+
+function saveUsers(users) {
+  fs.writeFileSync(USER_FILE, JSON.stringify(users, null, 2));
+}
+
+function getUserById(userId) {
+  return getUsers().find((user) => user.id === userId);
+}
+
+function publicUser(user) {
+  return { id: user.id, email: user.email, name: user.name, role: user.role };
+}
+
+function hashPassword(password) {
+  const salt = crypto.randomBytes(16);
+  const hash = crypto.pbkdf2Sync(password, salt, 310000, 32, "sha256");
+  return `pbkdf2$310000$${salt.toString("base64")}$${hash.toString("base64")}`;
+}
+
+function verifyPassword(password, encoded) {
+  const [, rounds, saltB64, hashB64] = encoded.split("$");
+  const salt = Buffer.from(saltB64, "base64");
+  const expected = Buffer.from(hashB64, "base64");
+  const actual = crypto.pbkdf2Sync(password, salt, Number(rounds), expected.length, "sha256");
+  return crypto.timingSafeEqual(actual, expected);
+}
+
+function audit(action, userId, details = {}) {
+  const previous = lastAuditHash();
+  const entry = { at: nowIso(), action, userId, details, previous };
+  entry.hash = crypto.createHash("sha256").update(JSON.stringify(entry)).digest("hex");
+  fs.appendFileSync(AUDIT_FILE, `${JSON.stringify(entry)}\n`);
+}
+
+function lastAuditHash() {
+  if (!fs.existsSync(AUDIT_FILE)) return null;
+  const lines = fs.readFileSync(AUDIT_FILE, "utf8").trim().split("\n").filter(Boolean);
+  if (!lines.length) return null;
+  return JSON.parse(lines[lines.length - 1]).hash;
+}
+
+function getSession(req) {
+  const token = parseCookies(req).crm_session;
+  const session = token ? sessions.get(token) : null;
+  if (!session) return null;
+  if (Date.now() - session.lastSeen > 1000 * 60 * 60 * 8) {
+    sessions.delete(token);
+    return null;
+  }
+  session.lastSeen = Date.now();
+  return session;
+}
+
+function serveStatic(req, res, url) {
+  const safePath = path.normalize(url.pathname === "/" ? "/index.html" : url.pathname).replace(/^(\.\.[/\\])+/, "");
+  const file = path.join(PUBLIC_DIR, safePath);
+  if (!file.startsWith(PUBLIC_DIR) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) return sendJson(res, 404, { error: "No encontrado" });
+  const ext = path.extname(file).toLowerCase();
+  const type = { ".html": "text/html; charset=utf-8", ".css": "text/css; charset=utf-8", ".js": "application/javascript; charset=utf-8" }[ext] || "application/octet-stream";
+  res.writeHead(200, { "Content-Type": type });
+  fs.createReadStream(file).pipe(res);
+}
+
+function applySecurityHeaders(res) {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("Referrer-Policy", "no-referrer");
+  res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  res.setHeader("Content-Security-Policy", "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'");
+  if (CONFIG.secureCookie) res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+}
+
+function sendJson(res, status, payload) {
+  res.writeHead(status, { "Content-Type": "application/json; charset=utf-8" });
+  res.end(JSON.stringify(payload));
+}
+
+function sendNoContent(res) {
+  res.writeHead(204);
+  res.end();
+}
+
+function readJson(req, limit = 1024 * 1024) {
+  return new Promise((resolve, reject) => {
+    let data = "";
+    req.on("data", (chunk) => {
+      data += chunk;
+      if (data.length > limit) reject(new Error("Payload demasiado grande"));
+    });
+    req.on("end", () => {
+      try {
+        resolve(data ? JSON.parse(data) : {});
+      } catch (error) {
+        reject(error);
+      }
+    });
+  });
+}
+
+function cookie(name, value, options = {}) {
+  const parts = [`${name}=${encodeURIComponent(value)}`, "Path=/"];
+  if (options.httpOnly) parts.push("HttpOnly");
+  if (options.sameSite) parts.push(`SameSite=${options.sameSite}`);
+  if (options.secure) parts.push("Secure");
+  if (Number.isFinite(options.maxAge)) parts.push(`Max-Age=${options.maxAge}`);
+  return parts.join("; ");
+}
+
+function parseCookies(req) {
+  return String(req.headers.cookie || "").split(";").reduce((acc, item) => {
+    const [rawKey, ...rest] = item.trim().split("=");
+    if (!rawKey) return acc;
+    acc[rawKey] = decodeURIComponent(rest.join("="));
+    return acc;
+  }, {});
+}
+
+function ensureDirectories() {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+  fs.mkdirSync(DOC_DIR, { recursive: true });
+}
+
+function loadEnv(file) {
+  if (!fs.existsSync(file)) return;
+  for (const line of fs.readFileSync(file, "utf8").split(/\r?\n/)) {
+    const match = line.match(/^([A-Z0-9_]+)=(.*)$/);
+    if (match && !process.env[match[1]]) process.env[match[1]] = match[2];
+  }
+}
+
+function text(value, max) {
+  return String(value || "").trim().slice(0, max);
+}
+
+function id(prefix) {
+  return `${prefix}_${crypto.randomBytes(8).toString("hex")}`;
+}
+
+function nowIso() {
+  return new Date().toISOString();
+}

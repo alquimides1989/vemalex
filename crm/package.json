@@ -1,0 +1,13 @@
+{
+  "name": "vemalex-crm",
+  "version": "0.1.0",
+  "private": true,
+  "description": "CRM privado para gestion de clientes, expedientes y documentos de VEMALEX Abogados.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

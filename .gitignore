@@ -1,3 +1,6 @@
 *.log
 *.tmp
 captura-*.png
+crm/data/
+crm/.env
+crm/backups/

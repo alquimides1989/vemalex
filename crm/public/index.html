@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>VEMALEX CRM</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main id="app">
+      <section class="login-view" data-login>
+        <form class="login-card" data-login-form>
+          <p class="eyebrow">VEMALEX CRM</p>
+          <h1>Acceso privado</h1>
+          <label>Email <input name="email" type="email" autocomplete="username" required /></label>
+          <label>Contraseña <input name="password" type="password" autocomplete="current-password" required /></label>
+          <button type="submit">Entrar</button>
+          <p class="message" data-login-message></p>
+        </form>
+      </section>
+
+      <section class="shell hidden" data-shell>
+        <aside class="sidebar">
+          <div class="brand">
+            <strong>VEMALEX</strong>
+            <span>Gestión interna</span>
+          </div>
+          <nav>
+            <button data-view-button="dashboard" class="active">Panel</button>
+            <button data-view-button="clients">Clientes</button>
+            <button data-view-button="matters">Expedientes</button>
+            <button data-view-button="tasks">Tareas</button>
+            <button data-view-button="documents">Documentos</button>
+            <button data-view-button="audit">Auditoría</button>
+          </nav>
+          <button class="logout" data-logout>Cerrar sesión</button>
+        </aside>
+
+        <section class="workspace">
+          <header class="topbar">
+            <div>
+              <p class="eyebrow">Despacho</p>
+              <h2 data-view-title>Panel</h2>
+            </div>
+            <span data-user></span>
+          </header>
+
+          <section class="view" data-view="dashboard">
+            <div class="stats" data-stats></div>
+            <div class="grid two">
+              <article class="panel">
+                <h3>Expedientes recientes</h3>
+                <div data-recent-matters></div>
+              </article>
+              <article class="panel">
+                <h3>Tareas abiertas</h3>
+                <div data-due-tasks></div>
+              </article>
+            </div>
+          </section>
+
+          <section class="view hidden" data-view="clients">
+            <article class="panel">
+              <h3>Nuevo cliente</h3>
+              <form class="form-grid" data-client-form>
+                <input name="name" placeholder="Nombre completo" required />
+                <input name="dni" placeholder="DNI/NIE" />
+                <input name="email" type="email" placeholder="Email" />
+                <input name="phone" placeholder="Teléfono" />
+                <input name="address" placeholder="Dirección" />
+                <input name="tags" placeholder="Etiquetas" />
+                <textarea name="notes" placeholder="Notas internas"></textarea>
+                <button type="submit">Guardar cliente</button>
+              </form>
+            </article>
+            <article class="panel"><h3>Clientes</h3><div data-clients></div></article>
+          </section>
+
+          <section class="view hidden" data-view="matters">
+            <article class="panel">
+              <h3>Nuevo expediente</h3>
+              <form class="form-grid" data-matter-form>
+                <input name="title" placeholder="Título del expediente" required />
+                <select name="clientId" data-client-select></select>
+                <input name="type" placeholder="Tipo: divorcio, custodia..." />
+                <input name="status" placeholder="Estado" value="abierto" />
+                <input name="court" placeholder="Juzgado" />
+                <input name="reference" placeholder="Referencia" />
+                <select name="risk"><option>bajo</option><option selected>medio</option><option>alto</option></select>
+                <textarea name="nextStep" placeholder="Próximo paso"></textarea>
+                <button type="submit">Crear expediente</button>
+              </form>
+            </article>
+            <article class="panel"><h3>Expedientes</h3><div data-matters></div></article>
+          </section>
+
+          <section class="view hidden" data-view="tasks">
+            <article class="panel">
+              <h3>Nueva tarea</h3>
+              <form class="form-grid" data-task-form>
+                <input name="title" placeholder="Tarea" required />
+                <select name="matterId" data-matter-select></select>
+                <input name="dueDate" type="date" />
+                <select name="priority"><option>baja</option><option selected>media</option><option>alta</option></select>
+                <button type="submit">Crear tarea</button>
+              </form>
+            </article>
+            <article class="panel"><h3>Tareas</h3><div data-tasks></div></article>
+          </section>
+
+          <section class="view hidden" data-view="documents">
+            <article class="panel">
+              <h3>Subir documento cifrado</h3>
+              <form class="form-grid" data-document-form>
+                <select name="matterId" data-document-matter-select></select>
+                <input name="file" type="file" required />
+                <button type="submit">Cifrar y guardar</button>
+              </form>
+            </article>
+            <article class="panel"><h3>Documentos</h3><div data-documents></div></article>
+          </section>
+
+          <section class="view hidden" data-view="audit">
+            <article class="panel"><h3>Registro de auditoría</h3><div data-audit></div></article>
+          </section>
+        </section>
+      </section>
+    </main>
+    <script src="app.js"></script>
+  </body>
+</html>
