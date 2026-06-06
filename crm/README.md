@@ -22,6 +22,7 @@ No publiques esta carpeta como web publica de Cloudflare Pages. Este CRM debe ej
 - Asistente ChatGPT interno mediante OpenAI API.
 - Perfiles IA configurables para replicar instrucciones de GPTs personalizados.
 - Exportacion a Excel de clientes, expedientes, tareas, agenda, tiempos, documentos, correos y expediente individual.
+- Backups locales fechados en `crm/backups`.
 - Notas internas.
 - Documentos cifrados con AES-256-GCM.
 - Categorias documentales.
@@ -134,13 +135,29 @@ No recomendado:
 
 ## Backups
 
-La carpeta critica es:
+La carpeta critica de datos activos es:
 
 ```text
 crm/data/
 ```
 
 Contiene usuarios, base cifrada, documentos cifrados y auditoria. Debe copiarse cifrada y conservarse fuera del repositorio.
+
+Desde la pantalla `Backups` del CRM puedes crear una copia local completa en:
+
+```text
+crm/backups/
+```
+
+Cada backup incluye:
+
+- `store.enc`: base cifrada con clientes, expedientes, agenda, tiempos, IA, etc.
+- `users.json`: usuarios.
+- `audit.jsonl`: auditoria.
+- `documents/`: documentos cifrados.
+- `manifest.json`: resumen del backup.
+
+La carpeta `crm/backups/` esta ignorada por Git y no se sube a GitHub.
 
 ## Recuperacion
 

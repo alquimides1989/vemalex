@@ -1,6 +1,6 @@
 let csrfToken = "";
 let calendarDate = new Date();
-let state = { clients: [], matters: [], tasks: [], documents: [], events: [], timeEntries: [], emailLog: [], aiProfiles: [], aiLog: [], aiSettings: {} };
+let state = { clients: [], matters: [], tasks: [], documents: [], events: [], timeEntries: [], emailLog: [], aiProfiles: [], aiLog: [], aiSettings: {}, backups: [] };
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
@@ -39,6 +39,7 @@ function bindEvents() {
   $("[data-ai-profile-form]").addEventListener("submit", saveAiProfile);
   $("[data-ai-settings-form]").addEventListener("submit", saveAiSettings);
   $("[data-ai-test]").addEventListener("click", testAiConnection);
+  $("[data-create-backup]").addEventListener("click", createBackup);
   $("[data-calendar-prev]").addEventListener("click", () => moveCalendar(-1));
   $("[data-calendar-next]").addEventListener("click", () => moveCalendar(1));
   $("[data-email-client-select]").addEventListener("change", fillEmailFromClient);
@@ -53,7 +54,7 @@ async function showApp(result) {
 }
 
 async function refreshAll() {
-  const [summary, clients, matters, tasks, documents, events, timeEntries, emailLog, aiProfiles, aiLog, aiSettings] = await Promise.all([
+  const [summary, clients, matters, tasks, documents, events, timeEntries, emailLog, aiProfiles, aiLog, aiSettings, backups] = await Promise.all([
     api("/api/summary"),
     api("/api/clients"),
     api("/api/matters"),
@@ -65,6 +66,7 @@ async function refreshAll() {
     api("/api/ai/profiles"),
     api("/api/ai/log"),
     api("/api/ai/settings"),
+    api("/api/backups"),
   ]);
   state.clients = clients.items || [];
   state.matters = matters.items || [];
@@ -76,6 +78,7 @@ async function refreshAll() {
   state.aiProfiles = aiProfiles.items || [];
   state.aiLog = aiLog.items || [];
   state.aiSettings = aiSettings || {};
+  state.backups = backups.items || [];
   renderSummary(summary);
   renderClients();
   renderMatters();
@@ -88,6 +91,7 @@ async function refreshAll() {
   renderAiLog();
   renderAiSettings();
   renderExportMatters();
+  renderBackups(backups.path);
   renderDocuments();
   renderSelects();
 }
@@ -176,6 +180,11 @@ function renderExportMatters() {
   $("[data-export-matters]").innerHTML = list(state.matters, (item) => `<strong>${esc(item.title)}</strong><span>${esc(clientName(item.clientId))} - ${esc(item.type)} - ${esc(item.status)}</span><div class="item-actions"><a href="/api/matters/${item.id}/export-xls">Exportar expediente Excel</a></div>`);
 }
 
+function renderBackups(basePath = "") {
+  $("[data-backup-path]").textContent = `Carpeta local: ${basePath || "crm/backups"}`;
+  $("[data-backups]").innerHTML = list(state.backups, (item) => `<strong>${esc(item.name)}</strong><span>${esc(item.createdAt)} - ${formatBytes(item.size)} - ${esc(item.files)} archivos</span><span>${esc(item.path)}</span>`);
+}
+
 function renderSelects() {
   const clientOptions = `<option value="">Cliente</option>${state.clients.map((item) => `<option value="${item.id}">${esc(item.name)}</option>`).join("")}`;
   $$("[data-client-select], [data-email-client-select]").forEach((select) => select.innerHTML = clientOptions);
@@ -261,6 +270,18 @@ async function testAiConnection() {
   $("[data-ai-settings-status]").textContent = result?.error || "Conexion con OpenAI correcta.";
 }
 
+async function createBackup() {
+  $("[data-backup-message]").textContent = "Creando backup local...";
+  const result = await api("/api/backups", { method: "POST", body: {}, silent: true });
+  if (result?.error) {
+    $("[data-backup-message]").textContent = result.error;
+    return;
+  }
+  $("[data-backup-message]").textContent = `Backup creado: ${result.item?.name || ""}`;
+  state.backups = [result.item, ...state.backups].filter(Boolean);
+  renderBackups(result.path);
+}
+
 function renderAiSettings() {
   const status = state.aiSettings.configured
     ? `OpenAI configurado (${state.aiSettings.source}) - ${state.aiSettings.maskedKey || "clave guardada"} - modelo ${state.aiSettings.model}`
@@ -294,7 +315,7 @@ async function loadTimeline(matterId) {
 function setView(view) {
   $$("[data-view]").forEach((el) => el.classList.toggle("hidden", el.dataset.view !== view));
   $$("[data-view-button]").forEach((el) => el.classList.toggle("active", el.dataset.viewButton === view));
-  $("[data-view-title]").textContent = { dashboard: "Panel", search: "Busqueda global", clients: "Clientes", matters: "Expedientes", tasks: "Tareas", events: "Calendario", timeEntries: "Tiempos", emails: "Correos", ai: "ChatGPT", exports: "Exportar Excel", documents: "Documentos", audit: "Auditoria" }[view] || "Panel";
+  $("[data-view-title]").textContent = { dashboard: "Panel", search: "Busqueda global", clients: "Clientes", matters: "Expedientes", tasks: "Tareas", events: "Calendario", timeEntries: "Tiempos", emails: "Correos", ai: "ChatGPT", exports: "Exportar Excel", backups: "Backups", documents: "Documentos", audit: "Auditoria" }[view] || "Panel";
   if (view === "audit") loadAudit();
 }
 
@@ -351,6 +372,13 @@ function matterTitle(matterId) {
 
 function clientName(clientId) {
   return state.clients.find((item) => item.id === clientId)?.name || "Sin cliente";
+}
+
+function formatBytes(bytes) {
+  const value = Number(bytes || 0);
+  if (value < 1024) return `${value} B`;
+  if (value < 1024 * 1024) return `${Math.round(value / 1024)} KB`;
+  return `${Math.round((value / 1024 / 1024) * 10) / 10} MB`;
 }
 
 function minutesLabel(minutes) {

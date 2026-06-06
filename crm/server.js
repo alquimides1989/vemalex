@@ -10,6 +10,7 @@ const ROOT = __dirname;
 const PUBLIC_DIR = path.join(ROOT, "public");
 const DATA_DIR = path.join(ROOT, "data");
 const DOC_DIR = path.join(DATA_DIR, "documents");
+const BACKUP_DIR = path.join(ROOT, "backups");
 const STORE_FILE = path.join(DATA_DIR, "store.enc");
 const USER_FILE = path.join(DATA_DIR, "users.json");
 const AUDIT_FILE = path.join(DATA_DIR, "audit.jsonl");
@@ -108,6 +109,7 @@ async function handleApi(req, res, url) {
   if (url.pathname === "/api/documents") return documentsApi(req, res, user);
   if (url.pathname.startsWith("/api/documents/") && req.method === "GET") return downloadDocument(req, res, user, url);
   if (url.pathname === "/api/audit" && req.method === "GET") return auditApi(req, res, user);
+  if (url.pathname === "/api/backups") return backupsApi(req, res, user);
 
   return sendJson(res, 404, { error: "Ruta no encontrada" });
 }
@@ -467,6 +469,15 @@ function auditApi(req, res, user) {
   return sendJson(res, 200, { items: lines.slice(-300).map((line) => JSON.parse(line)).reverse() });
 }
 
+function backupsApi(req, res, user) {
+  if (!["admin", "lawyer"].includes(user.role)) return sendJson(res, 403, { error: "Solo administracion o letrado" });
+  if (req.method === "GET") return sendJson(res, 200, { items: listBackups(), path: BACKUP_DIR });
+  if (req.method !== "POST") return sendJson(res, 405, { error: "Metodo no permitido" });
+  const item = createBackup(user.id);
+  audit("backup.create", user.id, { name: item.name, size: item.size });
+  return sendJson(res, 201, { item, path: BACKUP_DIR });
+}
+
 function sanitizeRecord(key, body, userId) {
   const base = { id: id(key.slice(0, 3)), createdAt: nowIso(), updatedAt: nowIso(), createdBy: userId };
   if (key === "clients") {
@@ -793,6 +804,97 @@ function safeFileName(value) {
   return String(value || "export").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9_-]+/gi, "-").replace(/^-+|-+$/g, "").slice(0, 80) || "export";
 }
 
+function createBackup(userId) {
+  ensureDirectories();
+  const name = `backup-${new Date().toISOString().replace(/[:.]/g, "-")}`;
+  const target = path.join(BACKUP_DIR, name);
+  fs.mkdirSync(target, { recursive: true });
+  copyIfExists(STORE_FILE, path.join(target, "store.enc"));
+  copyIfExists(USER_FILE, path.join(target, "users.json"));
+  copyIfExists(AUDIT_FILE, path.join(target, "audit.jsonl"));
+  if (fs.existsSync(DOC_DIR)) copyDirectory(DOC_DIR, path.join(target, "documents"));
+  const manifest = {
+    name,
+    createdAt: nowIso(),
+    createdBy: userId,
+    source: {
+      data: DATA_DIR,
+      documents: DOC_DIR,
+    },
+    files: backupFileList(target),
+  };
+  fs.writeFileSync(path.join(target, "manifest.json"), JSON.stringify(manifest, null, 2));
+  const item = backupInfo(target);
+  pruneBackups(30);
+  return item;
+}
+
+function listBackups() {
+  ensureDirectories();
+  return fs.readdirSync(BACKUP_DIR, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => backupInfo(path.join(BACKUP_DIR, entry.name)))
+    .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+}
+
+function backupInfo(dir) {
+  const manifestFile = path.join(dir, "manifest.json");
+  let manifest = {};
+  if (fs.existsSync(manifestFile)) {
+    try { manifest = JSON.parse(fs.readFileSync(manifestFile, "utf8")); } catch { manifest = {}; }
+  }
+  const stat = fs.statSync(dir);
+  return {
+    name: path.basename(dir),
+    path: dir,
+    createdAt: manifest.createdAt || stat.birthtime.toISOString(),
+    size: directorySize(dir),
+    files: backupFileList(dir).length,
+  };
+}
+
+function copyIfExists(source, target) {
+  if (!fs.existsSync(source)) return;
+  fs.mkdirSync(path.dirname(target), { recursive: true });
+  fs.copyFileSync(source, target);
+}
+
+function copyDirectory(source, target) {
+  fs.mkdirSync(target, { recursive: true });
+  for (const entry of fs.readdirSync(source, { withFileTypes: true })) {
+    const src = path.join(source, entry.name);
+    const dst = path.join(target, entry.name);
+    if (entry.isDirectory()) copyDirectory(src, dst);
+    else if (entry.isFile()) fs.copyFileSync(src, dst);
+  }
+}
+
+function backupFileList(dir) {
+  if (!fs.existsSync(dir)) return [];
+  const files = [];
+  const walk = (current) => {
+    for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
+      const full = path.join(current, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (entry.isFile()) files.push(path.relative(dir, full));
+    }
+  };
+  walk(dir);
+  return files;
+}
+
+function directorySize(dir) {
+  if (!fs.existsSync(dir)) return 0;
+  return backupFileList(dir).reduce((sum, file) => sum + fs.statSync(path.join(dir, file)).size, 0);
+}
+
+function pruneBackups(limit) {
+  const backups = listBackups();
+  for (const backup of backups.slice(limit)) {
+    fs.rmSync(path.join(BACKUP_DIR, backup.name), { recursive: true, force: true });
+  }
+}
+
 function readJson(req, limit = 1024 * 1024) {
   return new Promise((resolve, reject) => {
     let data = "";
@@ -1108,6 +1210,7 @@ function timelineItem(type, date, title, idValue) {
 function ensureDirectories() {
   fs.mkdirSync(DATA_DIR, { recursive: true });
   fs.mkdirSync(DOC_DIR, { recursive: true });
+  fs.mkdirSync(BACKUP_DIR, { recursive: true });
 }
 
 function loadEnv(file) {

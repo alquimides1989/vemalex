@@ -10,6 +10,7 @@
 - Envio de correos con Gmail desde la app, registrando el historial interno.
 - Asistente ChatGPT interno con perfiles configurables y contexto de cliente/expediente.
 - Exportaciones Excel para listados operativos y expediente completo.
+- Backups locales completos en carpeta ignorada por Git.
 - Base de datos local cifrada en `crm/data/store.enc`, no expuesta si `CRM_HOST=127.0.0.1`.
 - Registro de tiempos por expediente, con marcaje facturable/no facturable y tarifa orientativa.
 - Exportacion completa de expediente en JSON para copia interna o migracion.

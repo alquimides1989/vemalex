@@ -79,6 +79,7 @@ Para aproximarse a ISO 27001/GDPR en un despacho real:
 - Activar MFA en cuentas del proveedor de hosting.
 - No ejecutar como administrador del sistema.
 - Copias de seguridad diarias cifradas.
+- Usar la pantalla `Backups` para generar copias locales y mover periodicamente una copia a un soporte externo cifrado.
 - Revision mensual del log de auditoria.
 
 ## Riesgos pendientes del MVP

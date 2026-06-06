@@ -37,6 +37,7 @@
             <button data-view-button="emails">Correos</button>
             <button data-view-button="ai">ChatGPT</button>
             <button data-view-button="exports">Exportar Excel</button>
+            <button data-view-button="backups">Backups</button>
             <button data-view-button="documents">Documentos</button>
             <button data-view-button="audit">Auditoria</button>
           </nav>
@@ -266,6 +267,19 @@
             <article class="panel">
               <h3>Expedientes individuales</h3>
               <div data-export-matters></div>
+            </article>
+          </section>
+
+          <section class="view hidden" data-view="backups">
+            <article class="panel">
+              <h3>Backups locales cifrados</h3>
+              <p class="meta" data-backup-path>Carpeta local: crm/backups</p>
+              <button type="button" data-create-backup>Crear backup ahora</button>
+              <p class="message" data-backup-message></p>
+            </article>
+            <article class="panel">
+              <h3>Copias disponibles</h3>
+              <div data-backups></div>
             </article>
           </section>
 
