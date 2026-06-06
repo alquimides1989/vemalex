@@ -1,6 +1,7 @@
 *.log
 *.tmp
 captura-*.png
+.codex-remote-attachments/
 crm/data/
 crm/.env
 crm/backups/

@@ -1,15 +1,15 @@
 :root {
-  --ink: #142131;
-  --muted: #5d6977;
-  --line: #d9dee4;
-  --paper: #f7f5f1;
-  --white: #ffffff;
-  --navy: #0f1f2f;
-  --steel: #2f465c;
-  --gold: #b9a489;
-  --gold-dark: #8d765a;
-  --sage: #6f8179;
-  --shadow: 0 24px 80px rgba(15, 31, 47, 0.18);
+  --ink: #101b29;
+  --muted: #627083;
+  --line: #d4c3aa;
+  --paper: #f3efe7;
+  --white: #fffdf8;
+  --navy: #081727;
+  --steel: #172a3d;
+  --gold: #c6a77f;
+  --gold-dark: #a9845c;
+  --sage: #566e76;
+  --shadow: 0 28px 90px rgba(8, 23, 39, 0.24);
   color-scheme: light;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
@@ -80,8 +80,8 @@ textarea {
 .site-header.nav-active {
   padding-block: 12px;
   color: var(--ink);
-  background: rgba(247, 245, 241, 0.94);
-  box-shadow: 0 10px 40px rgba(15, 31, 47, 0.12);
+  background: rgba(243, 239, 231, 0.94);
+  box-shadow: 0 10px 40px rgba(8, 23, 39, 0.16);
   backdrop-filter: blur(18px);
 }
 
@@ -163,8 +163,9 @@ textarea {
 
 .button.primary {
   color: var(--white);
-  background: var(--gold-dark);
+  background: linear-gradient(180deg, var(--gold), var(--gold-dark));
   border-color: var(--gold-dark);
+  box-shadow: 0 14px 30px rgba(169, 132, 92, 0.24);
 }
 
 .button.primary:hover {
@@ -218,8 +219,8 @@ textarea {
 
 .hero-shade {
   background:
-    linear-gradient(90deg, rgba(15, 31, 47, 0.86), rgba(15, 31, 47, 0.44) 52%, rgba(15, 31, 47, 0.12)),
-    linear-gradient(0deg, rgba(15, 31, 47, 0.74), transparent 42%);
+    linear-gradient(90deg, rgba(8, 23, 39, 0.94), rgba(8, 23, 39, 0.62) 52%, rgba(8, 23, 39, 0.22)),
+    linear-gradient(0deg, rgba(8, 23, 39, 0.82), transparent 42%);
 }
 
 .hero-content {
@@ -271,7 +272,7 @@ h3 {
 
 .hero-lead {
   max-width: 650px;
-  color: rgba(255, 255, 255, 0.84);
+  color: rgba(255, 253, 248, 0.86);
   font-size: clamp(1.08rem, 2vw, 1.4rem);
   line-height: 1.55;
 }
@@ -356,7 +357,7 @@ h3 {
   position: relative;
   min-height: 620px;
   overflow: hidden;
-  background: var(--navy);
+  background: linear-gradient(145deg, var(--navy), var(--steel));
   box-shadow: var(--shadow);
 }
 
@@ -365,7 +366,7 @@ h3 {
   position: absolute;
   inset: auto 0 0;
   height: 42%;
-  background: linear-gradient(0deg, rgba(15, 31, 47, 0.56), transparent);
+  background: linear-gradient(0deg, rgba(8, 23, 39, 0.62), transparent);
   pointer-events: none;
 }
 
@@ -502,7 +503,7 @@ h3 {
 .case-grid a:hover {
   transform: translateY(-4px);
   border-color: var(--gold);
-  box-shadow: 0 18px 46px rgba(15, 31, 47, 0.12);
+  box-shadow: 0 18px 46px rgba(8, 23, 39, 0.14);
 }
 
 .case-grid span {
@@ -660,7 +661,7 @@ h3 {
   align-items: center;
   padding: clamp(42px, 6vw, 74px) clamp(20px, 5vw, 72px);
   color: var(--white);
-  background: var(--sage);
+  background: linear-gradient(135deg, #0b1d30, #233f52);
 }
 
 .urgent-band .eyebrow {
@@ -731,7 +732,7 @@ h3 {
 
 .lead-card {
   color: var(--white);
-  background: var(--steel);
+  background: linear-gradient(145deg, var(--navy), var(--steel));
   box-shadow: var(--shadow);
 }
 
@@ -773,7 +774,7 @@ h3 {
 
 .seo-link-grid a:hover {
   border-color: var(--gold-dark);
-  box-shadow: 0 14px 36px rgba(15, 31, 47, 0.08);
+  box-shadow: 0 14px 36px rgba(8, 23, 39, 0.1);
 }
 
 .seo-page {
@@ -783,8 +784,8 @@ h3 {
 .seo-page .site-header {
   position: sticky;
   color: var(--ink);
-  background: rgba(247, 245, 241, 0.96);
-  box-shadow: 0 10px 40px rgba(15, 31, 47, 0.1);
+  background: rgba(243, 239, 231, 0.96);
+  box-shadow: 0 10px 40px rgba(8, 23, 39, 0.14);
 }
 
 .seo-main {
@@ -798,7 +799,9 @@ h3 {
   align-items: end;
   padding: clamp(70px, 11vw, 128px) clamp(20px, 5vw, 72px) clamp(48px, 8vw, 90px);
   color: var(--white);
-  background: var(--navy);
+  background:
+    linear-gradient(135deg, rgba(8, 23, 39, 0.98), rgba(23, 42, 61, 0.94)),
+    radial-gradient(circle at 84% 18%, rgba(198, 167, 127, 0.18), transparent 34%);
 }
 
 .seo-hero h1 {
@@ -817,8 +820,8 @@ h3 {
 
 .seo-hero-panel {
   padding: clamp(24px, 4vw, 36px);
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 253, 248, 0.08);
+  border: 1px solid rgba(198, 167, 127, 0.24);
 }
 
 .seo-hero-panel strong,
@@ -851,7 +854,7 @@ h3 {
 .seo-block {
   padding: clamp(26px, 4vw, 44px);
   background: var(--white);
-  border: 1px solid rgba(15, 31, 47, 0.08);
+  border: 1px solid rgba(198, 167, 127, 0.22);
 }
 
 .seo-block h2 {
@@ -880,8 +883,8 @@ h3 {
   align-self: start;
   padding: 30px;
   background: var(--white);
-  border: 1px solid rgba(15, 31, 47, 0.08);
-  box-shadow: 0 18px 50px rgba(15, 31, 47, 0.08);
+  border: 1px solid rgba(198, 167, 127, 0.24);
+  box-shadow: 0 18px 50px rgba(8, 23, 39, 0.1);
 }
 
 .seo-side h2 {
@@ -913,7 +916,7 @@ h3 {
 }
 
 .reviews {
-  background: linear-gradient(180deg, rgba(247, 244, 237, 0.72), rgba(255, 255, 255, 0));
+  background: linear-gradient(180deg, rgba(8, 23, 39, 0.06), rgba(255, 253, 248, 0));
 }
 
 .review-summary {
@@ -953,8 +956,8 @@ h3 {
   justify-content: space-between;
   padding: clamp(26px, 4vw, 38px);
   background: var(--white);
-  border: 1px solid rgba(15, 31, 47, 0.08);
-  box-shadow: 0 18px 42px rgba(15, 31, 47, 0.08);
+  border: 1px solid rgba(198, 167, 127, 0.32);
+  box-shadow: 0 18px 42px rgba(8, 23, 39, 0.1);
 }
 
 .review-card h3 {
@@ -1084,7 +1087,9 @@ h3 {
 .quote-band {
   padding: clamp(58px, 9vw, 104px) 20px;
   color: var(--white);
-  background: var(--navy);
+  background:
+    linear-gradient(135deg, rgba(8, 23, 39, 0.98), rgba(18, 42, 62, 0.96)),
+    radial-gradient(circle at 50% 0%, rgba(198, 167, 127, 0.16), transparent 38%);
   text-align: center;
 }
 
@@ -1154,6 +1159,7 @@ h3 {
   padding: clamp(28px, 4vw, 42px);
   background: var(--white);
   box-shadow: var(--shadow);
+  border: 1px solid rgba(198, 167, 127, 0.28);
 }
 
 .contact-card > p:not(.eyebrow) {
@@ -1263,7 +1269,7 @@ h3 {
   gap: 20px;
   padding: 32px clamp(20px, 5vw, 72px);
   color: rgba(255, 255, 255, 0.78);
-  background: #0b1724;
+  background: #071421;
 }
 
 .site-footer strong,
@@ -1297,7 +1303,7 @@ h3 {
   background: var(--navy);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 4px;
-  box-shadow: 0 14px 34px rgba(15, 31, 47, 0.22);
+  box-shadow: 0 14px 34px rgba(8, 23, 39, 0.26);
   font-weight: 850;
 }
 
