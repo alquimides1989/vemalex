@@ -6,3 +6,10 @@ crm/data/
 crm/.env
 crm/backups/
 tools/
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example
