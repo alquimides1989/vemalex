@@ -184,7 +184,9 @@ closeInstallHelp.addEventListener("click", () => {
 });
 
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("service-worker.js");
+  navigator.serviceWorker.register("service-worker.js?v=6").then((registration) => {
+    registration.update();
+  });
 }
 
 renderSessions();
