@@ -8,7 +8,144 @@
     <meta name="theme-color" content="#030f1f" />
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="icon" href="../assets/logo-vemalex.png" />
-    <link rel="stylesheet" href="styles.css?v=blue-gold-2" />
+    <script>
+      (() => {
+        const version = "blue-gold-4";
+        const params = new URLSearchParams(window.location.search);
+        try {
+          if (localStorage.getItem("vemalex-ui-version") === version || params.has("fresh")) return;
+          localStorage.setItem("vemalex-ui-version", version);
+          const jobs = [];
+          if ("serviceWorker" in navigator) {
+            jobs.push(
+              navigator.serviceWorker
+                .getRegistrations()
+                .then((registrations) => Promise.all(registrations.map((item) => item.unregister())))
+            );
+          }
+          if ("caches" in window) {
+            jobs.push(caches.keys().then((keys) => Promise.all(keys.map((key) => caches.delete(key)))));
+          }
+          Promise.allSettled(jobs).finally(() => {
+            window.location.replace(`${window.location.pathname}?fresh=${Date.now()}${window.location.hash}`);
+          });
+        } catch (error) {
+          localStorage.setItem("vemalex-ui-version", version);
+        }
+      })();
+    </script>
+    <link rel="stylesheet" href="styles.css?v=blue-gold-4" />
+    <style>
+      body,
+      .app-shell {
+        background: linear-gradient(180deg, #06162a 0%, #031020 100%) !important;
+        color: #f8fbff !important;
+      }
+
+      .steps {
+        background: rgba(3, 15, 31, 0.92) !important;
+        border-bottom: 1px solid rgba(213, 156, 86, 0.32) !important;
+      }
+
+      .step {
+        background: rgba(255, 255, 255, 0.06) !important;
+        color: #b7c1cf !important;
+      }
+
+      .step.active {
+        background: rgba(213, 156, 86, 0.14) !important;
+        color: #ffffff !important;
+        box-shadow: inset 0 0 0 1px rgba(213, 156, 86, 0.48) !important;
+      }
+
+      .step.active span {
+        background: linear-gradient(180deg, #f0c37b, #d59c56) !important;
+        color: #06162a !important;
+      }
+
+      .booking,
+      .history {
+        background: #031020 !important;
+        color: #f8fbff !important;
+      }
+
+      .panel h2,
+      .history h2,
+      .subhead {
+        color: #f8fbff !important;
+      }
+
+      .session-card,
+      .method-card,
+      .summary-card,
+      .history-list article {
+        background: #07182c !important;
+        border-color: rgba(213, 156, 86, 0.42) !important;
+        color: #f8fbff !important;
+        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18) !important;
+      }
+
+      .session-card:has(input:checked),
+      .method-card:has(input:checked) {
+        background: #0a2038 !important;
+        border-color: #d59c56 !important;
+        box-shadow: 0 0 0 3px rgba(213, 156, 86, 0.16) !important;
+      }
+
+      .session-card small,
+      .method-card small,
+      .field,
+      .notice,
+      .history-list span,
+      .history-list small {
+        color: #b7c1cf !important;
+      }
+
+      .field input,
+      .field select,
+      .field textarea {
+        background: rgba(255, 255, 255, 0.06) !important;
+        border-color: rgba(213, 156, 86, 0.32) !important;
+        color: #f8fbff !important;
+      }
+
+      .method-card {
+        grid-template-columns: auto auto 1fr !important;
+        align-items: center !important;
+      }
+
+      .method-icon {
+        display: inline-grid !important;
+        width: 34px !important;
+        height: 34px !important;
+        place-items: center !important;
+        border: 1px solid rgba(213, 156, 86, 0.4) !important;
+        border-radius: 8px !important;
+        background: rgba(213, 156, 86, 0.08) !important;
+      }
+
+      .method-icon svg {
+        width: 22px !important;
+        height: 22px !important;
+      }
+
+      .method-icon.phone svg {
+        fill: #f0c37b !important;
+      }
+
+      .method-icon.whatsapp {
+        background: rgba(37, 211, 102, 0.13) !important;
+        border-color: rgba(37, 211, 102, 0.34) !important;
+      }
+
+      .method-icon.whatsapp svg {
+        fill: #25d366 !important;
+      }
+
+      .method-card small {
+        grid-column: 3 !important;
+      }
+    </style>
   </head>
   <body>
     <main class="app-shell">
@@ -67,16 +204,34 @@
           <h3 class="subhead">Modalidad de la sesion</h3>
           <div class="method-grid">
             <label class="method-card">
+              <span class="method-icon phone" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path d="M6.6 3.8 9.4 3l2 5.1-1.9 1.2c.9 1.8 2.3 3.2 4.1 4.1l1.2-1.9 5.1 2-.8 2.8c-.3 1-1.2 1.7-2.3 1.7C10.3 18 6 13.7 6 7.2c0-1.1.7-2.1 1.6-2.4Z" />
+                </svg>
+              </span>
               <input type="radio" name="method" value="Llamada telefonica" required checked />
               <span>Llamada telefonica</span>
               <small>El despacho llama al numero indicado.</small>
             </label>
             <label class="method-card">
+              <span class="method-icon whatsapp" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path d="M12 3.2a8.6 8.6 0 0 0-7.4 13l-1 4 4.1-1a8.6 8.6 0 1 0 4.3-16Zm0 2a6.6 6.6 0 0 1 5.6 10.1A6.6 6.6 0 0 1 8 17.1l-.5-.3-1.5.4.4-1.5-.3-.5A6.6 6.6 0 0 1 12 5.2Zm-2.8 3c-.2 0-.5.1-.7.4-.2.3-.8.8-.8 1.9s.8 2.2.9 2.4c.1.2 1.6 2.6 4 3.5 2 .7 2.4.6 2.8.5.4-.1 1.3-.6 1.5-1.1.2-.5.2-1 .1-1.1-.1-.1-.2-.2-.5-.3l-1.5-.7c-.2-.1-.4-.1-.6.2l-.7.9c-.1.2-.3.2-.6.1-.3-.1-1.1-.4-2-1.2-.7-.7-1.2-1.5-1.4-1.8-.1-.3 0-.4.1-.5l.4-.5c.1-.2.2-.3.3-.5.1-.2.1-.4 0-.6l-.7-1.7c-.1-.3-.3-.4-.6-.4Z" />
+                </svg>
+              </span>
               <input type="radio" name="method" value="Videollamada WhatsApp" required />
               <span>Videollamada WhatsApp</span>
               <small>Se confirma por WhatsApp antes de la cita.</small>
             </label>
             <label class="method-card">
+              <span class="method-icon meet" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path class="meet-green" d="M4 7.2c0-1.2 1-2.2 2.2-2.2h7v5.2H4v-3Z" />
+                  <path class="meet-blue" d="M4 10.2h9.2V19h-7A2.2 2.2 0 0 1 4 16.8v-6.6Z" />
+                  <path class="meet-yellow" d="M13.2 5 18 8.4v7.2L13.2 19V5Z" />
+                  <path class="meet-red" d="M18 8.4 21 6.8v10.4L18 15.6V8.4Z" />
+                </svg>
+              </span>
               <input type="radio" name="method" value="Google Meet" required />
               <span>Google Meet</span>
               <small>Recibiras el enlace de reunion por email.</small>
@@ -178,7 +333,7 @@
       </label>
     </template>
 
-    <script src="config.js?v=blue-gold-2"></script>
-    <script src="app.js?v=blue-gold-2"></script>
+    <script src="config.js?v=blue-gold-4"></script>
+    <script src="app.js?v=blue-gold-4"></script>
   </body>
 </html>

@@ -290,14 +290,67 @@ textarea {
 
 .method-card {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: auto auto 1fr;
   gap: 4px 10px;
-  align-items: start;
+  align-items: center;
   padding: 15px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--card);
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18);
+}
+
+.method-icon {
+  display: inline-grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid rgba(213, 156, 86, 0.4);
+  border-radius: 8px;
+  background: rgba(213, 156, 86, 0.08);
+}
+
+.method-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.method-icon.phone svg {
+  fill: var(--accent-light);
+}
+
+.method-icon.whatsapp {
+  background: rgba(37, 211, 102, 0.13);
+  border-color: rgba(37, 211, 102, 0.34);
+}
+
+.method-icon.whatsapp svg {
+  fill: #25d366;
+}
+
+.method-icon.meet {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.method-icon.meet svg {
+  width: 24px;
+  height: 24px;
+}
+
+.meet-green {
+  fill: #00ac47;
+}
+
+.meet-blue {
+  fill: #00832d;
+}
+
+.meet-yellow {
+  fill: #fbbc04;
+}
+
+.meet-red {
+  fill: #ea4335;
 }
 
 .method-card:has(input:checked) {
@@ -311,7 +364,7 @@ textarea {
 }
 
 .method-card small {
-  grid-column: 2;
+  grid-column: 3;
   color: var(--muted);
   line-height: 1.4;
 }
