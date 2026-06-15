@@ -1,15 +1,17 @@
 :root {
-  color-scheme: light;
-  --ink: #102131;
-  --muted: #66717c;
-  --line: #d9dee3;
-  --paper: #f6f2eb;
-  --card: #ffffff;
-  --brand: #0f1f2f;
-  --brand-soft: #203449;
-  --accent: #c9955d;
-  --accent-dark: #9d6d3d;
-  --shadow: 0 16px 34px rgba(15, 31, 47, 0.11);
+  color-scheme: dark;
+  --ink: #f8fbff;
+  --muted: #b7c1cf;
+  --line: rgba(213, 156, 86, 0.32);
+  --paper: #030f1f;
+  --card: #07182c;
+  --card-strong: #0a2038;
+  --brand: #071629;
+  --brand-soft: #102c48;
+  --accent: #d59c56;
+  --accent-light: #f0c37b;
+  --accent-dark: #b67a38;
+  --shadow: 0 18px 38px rgba(0, 0, 0, 0.34);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
@@ -19,7 +21,8 @@
 
 body {
   margin: 0;
-  background: var(--paper);
+  background:
+    linear-gradient(180deg, #020b17 0%, #06162a 46%, #031020 100%);
   color: var(--ink);
 }
 
@@ -34,8 +37,10 @@ textarea {
   width: min(760px, 100%);
   min-height: 100vh;
   margin: 0 auto;
-  background: linear-gradient(180deg, #fbfaf7 0%, #f4efe6 100%);
-  box-shadow: 0 0 40px rgba(15, 31, 47, 0.12);
+  background:
+    linear-gradient(160deg, rgba(213, 156, 86, 0.08), transparent 34%),
+    linear-gradient(180deg, #06162a 0%, #031020 100%);
+  box-shadow: 0 0 48px rgba(0, 0, 0, 0.45);
 }
 
 .topbar {
@@ -43,9 +48,10 @@ textarea {
   top: 0;
   z-index: 5;
   padding: max(12px, env(safe-area-inset-top)) 14px 12px;
-  background: rgba(15, 31, 47, 0.98);
+  background: rgba(3, 15, 31, 0.96);
   color: #fff;
   backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(213, 156, 86, 0.28);
 }
 
 .brand-row {
@@ -74,7 +80,7 @@ textarea {
 }
 
 .brand span {
-  color: rgba(255, 255, 255, 0.72);
+  color: rgba(240, 195, 123, 0.78);
   font-size: 0.8rem;
 }
 
@@ -102,7 +108,7 @@ textarea {
   justify-content: center;
   min-width: 82px;
   min-height: 40px;
-  border: 1px solid rgba(255, 255, 255, 0.26);
+  border: 1px solid rgba(213, 156, 86, 0.46);
   border-radius: 999px;
   color: #fff;
   font-size: 0.86rem;
@@ -111,22 +117,25 @@ textarea {
 }
 
 .top-action.install {
-  background: var(--accent);
+  background: linear-gradient(180deg, var(--accent-light), var(--accent));
   border-color: var(--accent);
-  color: #fff;
+  color: #06162a;
+  box-shadow: 0 8px 18px rgba(213, 156, 86, 0.22);
 }
 
 .hero {
   padding: 34px 20px 20px;
   background:
-    radial-gradient(circle at 85% 12%, rgba(201, 149, 93, 0.22), transparent 32%),
-    linear-gradient(145deg, #102131, #31465b 72%, #233346);
+    linear-gradient(135deg, rgba(213, 156, 86, 0.2) 0 1px, transparent 1px 100%),
+    linear-gradient(145deg, #031020, #0a2038 72%, #07182c);
+  background-size: 100% 100%, auto;
+  border-bottom: 1px solid rgba(213, 156, 86, 0.24);
   color: #fff;
 }
 
 .eyebrow {
   margin: 0 0 10px;
-  color: var(--accent);
+  color: var(--accent-light);
   font-size: 0.78rem;
   font-weight: 900;
   letter-spacing: 0.08em;
@@ -149,7 +158,7 @@ textarea {
 
 .hero p:last-child {
   max-width: 35rem;
-  color: rgba(255, 255, 255, 0.84);
+  color: rgba(248, 251, 255, 0.84);
   line-height: 1.6;
 }
 
@@ -165,10 +174,10 @@ textarea {
   align-items: center;
   min-height: 30px;
   padding: 0 10px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(213, 156, 86, 0.38);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.86);
+  background: rgba(213, 156, 86, 0.1);
+  color: rgba(248, 251, 255, 0.9);
   font-size: 0.78rem;
   font-weight: 800;
 }
@@ -178,10 +187,10 @@ textarea {
   gap: 14px;
   margin: 16px;
   padding: 16px;
-  border: 1px solid rgba(201, 149, 93, 0.34);
+  border: 1px solid var(--line);
   border-radius: 8px;
-  background: #fffaf4;
-  box-shadow: 0 8px 22px rgba(15, 31, 47, 0.06);
+  background: var(--card);
+  box-shadow: var(--shadow);
 }
 
 .install-help[hidden] {
@@ -205,7 +214,7 @@ textarea {
   grid-template-columns: repeat(3, 1fr);
   gap: 6px;
   padding: 10px 12px;
-  background: #fff;
+  background: rgba(3, 15, 31, 0.86);
   border-bottom: 1px solid var(--line);
 }
 
@@ -217,7 +226,7 @@ textarea {
   min-height: 40px;
   border: 0;
   border-radius: 999px;
-  background: #f1f3f5;
+  background: rgba(255, 255, 255, 0.06);
   color: var(--muted);
   font-size: 0.82rem;
   font-weight: 800;
@@ -229,18 +238,18 @@ textarea {
   height: 22px;
   place-items: center;
   border-radius: 999px;
-  background: #edf0f2;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .step.active {
-  background: #fff8ef;
-  color: var(--brand);
-  box-shadow: inset 0 0 0 1px rgba(201, 149, 93, 0.36);
+  background: rgba(213, 156, 86, 0.14);
+  color: #fff;
+  box-shadow: inset 0 0 0 1px rgba(213, 156, 86, 0.48);
 }
 
 .step.active span {
-  background: var(--accent);
-  color: #fff;
+  background: linear-gradient(180deg, var(--accent-light), var(--accent));
+  color: #06162a;
 }
 
 .booking,
@@ -287,13 +296,14 @@ textarea {
   padding: 15px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #fff;
-  box-shadow: 0 8px 22px rgba(15, 31, 47, 0.05);
+  background: var(--card);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18);
 }
 
 .method-card:has(input:checked) {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(201, 149, 93, 0.18);
+  background: var(--card-strong);
+  box-shadow: 0 0 0 3px rgba(213, 156, 86, 0.16);
 }
 
 .method-card span {
@@ -314,13 +324,14 @@ textarea {
   padding: 16px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #fff;
-  box-shadow: 0 8px 22px rgba(15, 31, 47, 0.05);
+  background: var(--card);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18);
 }
 
 .session-card:has(input:checked) {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(201, 149, 93, 0.18);
+  background: var(--card-strong);
+  box-shadow: 0 0 0 3px rgba(213, 156, 86, 0.16);
 }
 
 .session-card small {
@@ -345,8 +356,19 @@ textarea {
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 11px 12px;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.06);
   color: var(--ink);
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: var(--accent-light);
+  outline: 3px solid rgba(213, 156, 86, 0.18);
+}
+
+.field input[type="date"] {
+  color-scheme: dark;
 }
 
 .field textarea {
@@ -376,22 +398,22 @@ textarea {
 }
 
 .button.primary {
-  background: var(--accent);
-  color: #fff;
-  box-shadow: 0 10px 22px rgba(157, 109, 61, 0.22);
+  background: linear-gradient(180deg, var(--accent-light), var(--accent));
+  color: #06162a;
+  box-shadow: 0 10px 24px rgba(213, 156, 86, 0.24);
 }
 
 .button.secondary {
   border: 1px solid var(--line);
-  background: #fff;
-  color: var(--brand);
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
 }
 
 .button.text {
   width: 100%;
   margin-top: 12px;
   background: transparent;
-  color: var(--accent-dark);
+  color: var(--accent-light);
 }
 
 .summary-card,
@@ -399,8 +421,8 @@ textarea {
   padding: 16px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #fff;
-  box-shadow: 0 8px 22px rgba(15, 31, 47, 0.05);
+  background: var(--card);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18);
 }
 
 .summary-card dl,
@@ -413,7 +435,7 @@ textarea {
 .summary-card div {
   grid-template-columns: 120px 1fr;
   padding: 8px 0;
-  border-bottom: 1px solid #edf0f2;
+  border-bottom: 1px solid rgba(213, 156, 86, 0.18);
 }
 
 .summary-card div:last-child {

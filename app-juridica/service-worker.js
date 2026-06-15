@@ -1,11 +1,11 @@
-const CACHE_NAME = "vemalex-sesiones-v6";
+const CACHE_NAME = "vemalex-sesiones-v8";
 const APP_SHELL = "./";
 const APP_ASSETS = [
   "./",
   "./index.html",
-  "./styles.css?v=web-install-2",
-  "./app.js?v=web-install-2",
-  "./config.js?v=web-install-2",
+  "./styles.css?v=blue-gold-2",
+  "./app.js?v=blue-gold-2",
+  "./config.js?v=blue-gold-2",
   "./manifest.webmanifest",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
@@ -38,6 +38,17 @@ self.addEventListener("fetch", (event) => {
   if (event.request.mode === "navigate") {
     event.respondWith(
       fetch(event.request).catch(() => caches.match(APP_SHELL).then((cached) => cached || caches.match("./index.html")))
+    );
+    return;
+  }
+
+  if (["style", "script", "manifest"].includes(event.request.destination)) {
+    event.respondWith(
+      fetch(event.request).then((response) => {
+        const copy = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+        return response;
+      }).catch(() => caches.match(event.request))
     );
     return;
   }
