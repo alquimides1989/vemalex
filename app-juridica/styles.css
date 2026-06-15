@@ -100,7 +100,7 @@ textarea {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 76px;
+  min-width: 96px;
   min-height: 40px;
   border: 1px solid rgba(255, 255, 255, 0.26);
   border-radius: 999px;
@@ -474,10 +474,10 @@ textarea {
   }
 
   .top-action {
-    min-width: 62px;
+    min-width: 86px;
     min-height: 36px;
-    padding: 0 10px;
-    font-size: 0.78rem;
+    padding: 0 9px;
+    font-size: 0.74rem;
   }
 
   .steps {
