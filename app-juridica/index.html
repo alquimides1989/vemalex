@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>VEMALEX Sesiones Jurídicas</title>
-    <meta name="description" content="App de VEMALEX para reservar sesiones pagadas de asistencia jurídica." />
+    <title>VEMALEX Sesiones Juridicas</title>
+    <meta name="description" content="App de VEMALEX para reservar sesiones pagadas de asistencia juridica." />
     <meta name="theme-color" content="#0f1f2f" />
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="icon" href="../assets/logo-vemalex.png" />
@@ -17,35 +17,56 @@
           <img src="../assets/logo-vemalex.png" alt="" width="42" height="38" />
           <div>
             <strong>VEMALEX</strong>
-            <span>Sesiones jurídicas</span>
+            <span>Sesiones juridicas</span>
           </div>
         </div>
+        <a class="install-button" href="../downloads/vemalex-sesiones-android-source.zip" data-download-apk>Android</a>
         <button class="install-button" type="button" data-install hidden>Instalar</button>
       </header>
 
       <section class="hero">
-        <p class="eyebrow">Asistencia jurídica privada</p>
-        <h1>Reserva una sesión pagada con VEMALEX.</h1>
+        <p class="eyebrow">Asistencia juridica privada</p>
+        <h1>Reserva una sesion pagada con VEMALEX.</h1>
         <p>
-          Elige el tipo de consulta, prepara los datos del caso y completa el pago o solicita el
-          enlace para confirmar tu sesión.
+          Elige el tipo de consulta, la modalidad de atencion y completa el pago o solicita el
+          enlace para confirmar tu sesion.
         </p>
       </section>
 
       <section class="steps" aria-label="Progreso">
-        <button class="step active" type="button" data-step-jump="0"><span>1</span>Sesión</button>
+        <button class="step active" type="button" data-step-jump="0"><span>1</span>Sesion</button>
         <button class="step" type="button" data-step-jump="1"><span>2</span>Datos</button>
         <button class="step" type="button" data-step-jump="2"><span>3</span>Pago</button>
       </section>
 
       <form class="booking" data-booking-form>
         <section class="panel active" data-panel="0" aria-labelledby="session-title">
-          <h2 id="session-title">Tipo de sesión</h2>
+          <h2 id="session-title">Tipo de sesion</h2>
           <div class="session-grid" data-session-grid></div>
+
+          <h3 class="subhead">Modalidad de la sesion</h3>
+          <div class="method-grid">
+            <label class="method-card">
+              <input type="radio" name="method" value="Llamada telefonica" required checked />
+              <span>Llamada telefonica</span>
+              <small>El despacho llama al numero indicado.</small>
+            </label>
+            <label class="method-card">
+              <input type="radio" name="method" value="Videollamada WhatsApp" required />
+              <span>Videollamada WhatsApp</span>
+              <small>Se confirma por WhatsApp antes de la cita.</small>
+            </label>
+            <label class="method-card">
+              <input type="radio" name="method" value="Google Meet" required />
+              <span>Google Meet</span>
+              <small>Recibiras el enlace de reunion por email.</small>
+            </label>
+          </div>
+
           <label class="field">
             Preferencia horaria
             <select name="slot" required>
-              <option value="Manana">Mañana</option>
+              <option value="Manana">Manana</option>
               <option value="Tarde">Tarde</option>
               <option value="Lo antes posible">Lo antes posible</option>
             </select>
@@ -64,7 +85,7 @@
             <input name="name" autocomplete="name" required />
           </label>
           <label class="field">
-            Teléfono
+            Telefono
             <input name="phone" type="tel" autocomplete="tel" required />
           </label>
           <label class="field">
@@ -72,13 +93,13 @@
             <input name="email" type="email" autocomplete="email" required />
           </label>
           <label class="field">
-            Área principal
+            Area principal
             <select name="area" required>
-              <option>Divorcio o separación</option>
+              <option>Divorcio o separacion</option>
               <option>Custodia, visitas o menores</option>
-              <option>Pensión de alimentos</option>
-              <option>Modificación de medidas</option>
-              <option>Mediación familiar</option>
+              <option>Pension de alimentos</option>
+              <option>Modificacion de medidas</option>
+              <option>Mediacion familiar</option>
               <option>Derecho penal</option>
               <option>Derecho social</option>
               <option>Otro asunto</option>
@@ -90,7 +111,7 @@
           </label>
           <label class="check">
             <input name="consent" type="checkbox" required />
-            <span>Acepto que VEMALEX use estos datos para gestionar la sesión solicitada.</span>
+            <span>Acepto que VEMALEX use estos datos para gestionar la sesion solicitada.</span>
           </label>
           <div class="actions">
             <button class="button secondary" type="button" data-prev>Volver</button>
@@ -99,16 +120,16 @@
         </section>
 
         <section class="panel" data-panel="2" aria-labelledby="payment-title">
-          <h2 id="payment-title">Confirmación y pago</h2>
+          <h2 id="payment-title">Confirmacion y pago</h2>
           <div class="summary-card" data-summary></div>
           <div class="payment-actions">
-            <a class="button primary" href="#" data-pay target="_blank" rel="noreferrer">Pagar sesión</a>
+            <a class="button primary" href="#" data-pay target="_blank" rel="noreferrer">Pagar sesion</a>
             <a class="button secondary" href="#" data-whatsapp target="_blank" rel="noreferrer">Enviar por WhatsApp</a>
             <a class="button secondary" href="#" data-email>Enviar por email</a>
           </div>
-          <button class="button text" type="button" data-save>Guardar solicitud en este móvil</button>
+          <button class="button text" type="button" data-save>Guardar solicitud en este movil</button>
           <p class="notice" data-payment-note>
-            Los pagos se realizan en una pasarela externa segura. La sesión queda sujeta a confirmación
+            Los pagos se realizan en una pasarela externa segura. La sesion queda sujeta a confirmacion
             del despacho y no sustituye un servicio de urgencias.
           </p>
           <div class="actions">

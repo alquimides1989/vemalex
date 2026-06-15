@@ -25,11 +25,20 @@ Stripe Payment Links permite cobrar con una página de pago alojada por Stripe s
 ## Qué incluye
 
 - Selección de sesión y precio.
+- Elección de modalidad: llamada telefonica, videollamada WhatsApp o Google Meet.
 - Datos de contacto y resumen del caso.
 - Envío por WhatsApp o email.
 - Pago mediante enlace configurable.
 - Historial local en el dispositivo.
 - Manifest y service worker para instalación en Android.
+
+## Version Android descargable
+
+El proyecto Android esta disponible en:
+
+`https://vemalex.org/downloads/vemalex-sesiones-android-source.zip`
+
+Para generar el APK hay que abrir ese proyecto en Android Studio y usar `Build APK`.
 
 ## Nota de publicación en Google Play
 

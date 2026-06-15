@@ -8,14 +8,14 @@ window.VEMALEX_APP_CONFIG = {
       id: "express30",
       name: "Consulta Express",
       price: 45,
-      detail: "30 min por teléfono o videollamada para orientar dudas concretas.",
+      detail: "30 min por telefono o videollamada para orientar dudas concretas.",
       paymentUrl: ""
     },
     {
       id: "strategy60",
       name: "Sesión estratégica",
       price: 85,
-      detail: "60 min para revisar escenario, documentos y próximos pasos.",
+      detail: "60 min para revisar escenario, documentos y proximos pasos.",
       paymentUrl: ""
     },
     {
