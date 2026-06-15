@@ -4,13 +4,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>VEMALEX Sesiones Jurídicas</title>
-    <meta name="description" content="App de VEMALEX para reservar sesiones pagadas de asistencia jurídica." />
+    <meta name="description" content="App de VEMALEX para reservar sesiones de asistencia jurídica." />
     <meta name="theme-color" content="#030f1f" />
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="icon" href="../assets/logo-vemalex.png" />
     <script>
       (() => {
-        const version = "blue-gold-6";
+        const version = "blue-gold-7";
         const params = new URLSearchParams(window.location.search);
         try {
           if (localStorage.getItem("vemalex-ui-version") === version || params.has("fresh")) return;
@@ -34,7 +34,7 @@
         }
       })();
     </script>
-    <link rel="stylesheet" href="styles.css?v=blue-gold-6" />
+    <link rel="stylesheet" href="styles.css?v=blue-gold-7" />
     <style>
       body,
       .app-shell {
@@ -166,10 +166,9 @@
 
       <section class="hero">
         <p class="eyebrow">Asistencia jurídica privada</p>
-        <h1>Reserva una sesión pagada con VEMALEX.</h1>
+        <h1>Reserva tu consulta con VEMALEX.</h1>
         <p>
-          Elige el tipo de consulta, la modalidad de atención y completa el pago o solicita el
-          enlace para confirmar tu sesión.
+          Elige el tipo de consulta, la modalidad de atención y solicita tu cita de forma sencilla.
         </p>
         <div class="hero-strip" aria-label="Datos de la reserva">
           <span>Pago seguro</span>
@@ -333,7 +332,7 @@
       </label>
     </template>
 
-    <script src="config.js?v=blue-gold-6"></script>
-    <script src="app.js?v=blue-gold-6"></script>
+    <script src="config.js?v=blue-gold-7"></script>
+    <script src="app.js?v=blue-gold-7"></script>
   </body>
 </html>

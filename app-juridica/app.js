@@ -67,7 +67,7 @@ function validateCurrentPanel() {
 
 function buildMessage(data) {
   return [
-    "Hola VEMALEX, quiero reservar una sesión jurídica pagada.",
+    "Hola VEMALEX, quiero reservar una consulta jurídica.",
     "",
     `Sesión: ${data.sessionName} (${money.format(Number(data.sessionPrice))})`,
     `Modalidad: ${data.method}`,
@@ -184,7 +184,7 @@ closeInstallHelp.addEventListener("click", () => {
 });
 
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("service-worker.js?v=12", { updateViaCache: "none" }).then((registration) => {
+  navigator.serviceWorker.register("service-worker.js?v=13", { updateViaCache: "none" }).then((registration) => {
     registration.update();
   });
 }

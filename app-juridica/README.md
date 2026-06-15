@@ -1,6 +1,6 @@
 # VEMALEX Sesiones Jurídicas
 
-App instalable en Android para reservar sesiones pagadas de asistencia jurídica.
+App instalable en Android para reservar sesiones de asistencia jurídica.
 
 ## Cómo probarla
 

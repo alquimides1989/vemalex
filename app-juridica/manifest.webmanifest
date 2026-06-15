@@ -1,7 +1,7 @@
 {
   "name": "VEMALEX Sesiones Jurídicas",
   "short_name": "VEMALEX",
-  "description": "Reserva sesiones pagadas de asistencia jurídica con VEMALEX.",
+  "description": "Reserva sesiones de asistencia jurídica con VEMALEX.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
