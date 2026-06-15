@@ -1,4 +1,4 @@
-const CACHE_NAME = "vemalex-sesiones-v2";
+const CACHE_NAME = "vemalex-sesiones-v3";
 const APP_ASSETS = [
   "./index.html",
   "./styles.css",

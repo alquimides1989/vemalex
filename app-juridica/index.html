@@ -13,15 +13,19 @@
   <body>
     <main class="app-shell">
       <header class="topbar">
-        <div class="brand">
-          <img src="../assets/logo-vemalex.png" alt="" width="42" height="38" />
-          <div>
-            <strong>VEMALEX</strong>
-            <span>Sesiones juridicas</span>
+        <div class="brand-row">
+          <div class="brand">
+            <img src="../assets/logo-vemalex.png" alt="" width="42" height="38" />
+            <div>
+              <strong>VEMALEX</strong>
+              <span>Sesiones juridicas</span>
+            </div>
+          </div>
+          <div class="top-actions" aria-label="Acciones de instalacion">
+            <a class="top-action android" href="../downloads/vemalex-sesiones.apk" data-download-apk>APK</a>
+            <button class="top-action install" type="button" data-install hidden>Instalar</button>
           </div>
         </div>
-        <a class="install-button" href="../downloads/vemalex-sesiones.apk" data-download-apk>Android</a>
-        <button class="install-button" type="button" data-install hidden>Instalar</button>
       </header>
 
       <section class="hero">
@@ -31,6 +35,11 @@
           Elige el tipo de consulta, la modalidad de atencion y completa el pago o solicita el
           enlace para confirmar tu sesion.
         </p>
+        <div class="hero-strip" aria-label="Datos de la reserva">
+          <span>Pago seguro</span>
+          <span>WhatsApp o Meet</span>
+          <span>Confirmacion del despacho</span>
+        </div>
       </section>
 
       <section class="steps" aria-label="Progreso">
