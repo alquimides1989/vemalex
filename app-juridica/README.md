@@ -34,7 +34,11 @@ Stripe Payment Links permite cobrar con una página de pago alojada por Stripe s
 
 ## Version Android descargable
 
-El proyecto Android esta disponible en:
+El APK descargable esta disponible en:
+
+`https://vemalex.org/downloads/vemalex-sesiones.apk`
+
+El proyecto Android tambien esta disponible en:
 
 `https://vemalex.org/downloads/vemalex-sesiones-android-source.zip`
 

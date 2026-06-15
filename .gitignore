@@ -6,3 +6,5 @@ crm/data/
 crm/.env
 crm/backups/
 tools/
+android-vemalex-sesiones/.gradle/
+android-vemalex-sesiones/app/build/
