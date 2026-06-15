@@ -22,8 +22,7 @@
             </div>
           </div>
           <div class="top-actions" aria-label="Acciones de instalacion">
-            <a class="top-action android" href="../downloads/vemalex-sesiones.apk" data-download-apk>App Android</a>
-            <button class="top-action install" type="button" data-install hidden>Instalar</button>
+            <button class="top-action install" type="button" data-install-web>Instalar web</button>
           </div>
         </div>
       </header>
@@ -40,6 +39,18 @@
           <span>WhatsApp o Meet</span>
           <span>Confirmacion del despacho</span>
         </div>
+      </section>
+
+      <section class="install-help" data-install-help hidden>
+        <div>
+          <p class="eyebrow">Instalacion web</p>
+          <h2>Anade esta app a tu pantalla de inicio.</h2>
+          <p>
+            En Chrome Android toca el menu de tres puntos y elige "Anadir a pantalla de inicio" o
+            "Instalar aplicacion". No descarga APK y evita el error de instalacion externa.
+          </p>
+        </div>
+        <button class="button secondary" type="button" data-close-install-help>Cerrar</button>
       </section>
 
       <section class="steps" aria-label="Progreso">
@@ -167,7 +178,7 @@
       </label>
     </template>
 
-    <script src="config.js"></script>
-    <script src="app.js"></script>
+    <script src="config.js?v=web-install"></script>
+    <script src="app.js?v=web-install"></script>
   </body>
 </html>

@@ -9,7 +9,9 @@ const payLink = document.querySelector("[data-pay]");
 const whatsAppLink = document.querySelector("[data-whatsapp]");
 const emailLink = document.querySelector("[data-email]");
 const historyList = document.querySelector("[data-history-list]");
-const installButton = document.querySelector("[data-install]");
+const installButton = document.querySelector("[data-install-web]");
+const installHelp = document.querySelector("[data-install-help]");
+const closeInstallHelp = document.querySelector("[data-close-install-help]");
 let currentStep = 0;
 let deferredInstallPrompt;
 
@@ -164,15 +166,21 @@ form.addEventListener("reset", () => {
 window.addEventListener("beforeinstallprompt", (event) => {
   event.preventDefault();
   deferredInstallPrompt = event;
-  installButton.hidden = false;
 });
 
 installButton.addEventListener("click", async () => {
-  if (!deferredInstallPrompt) return;
-  deferredInstallPrompt.prompt();
-  await deferredInstallPrompt.userChoice;
-  deferredInstallPrompt = null;
-  installButton.hidden = true;
+  if (deferredInstallPrompt) {
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    return;
+  }
+  installHelp.hidden = false;
+  installHelp.scrollIntoView({ behavior: "smooth", block: "start" });
+});
+
+closeInstallHelp.addEventListener("click", () => {
+  installHelp.hidden = true;
 });
 
 if ("serviceWorker" in navigator) {

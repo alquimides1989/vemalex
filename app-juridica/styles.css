@@ -110,14 +110,10 @@ textarea {
   white-space: nowrap;
 }
 
-.top-action.android {
+.top-action.install {
   background: var(--accent);
   border-color: var(--accent);
-}
-
-.top-action.install {
-  background: #fff;
-  color: var(--brand);
+  color: #fff;
 }
 
 .hero {
@@ -175,6 +171,33 @@ textarea {
   color: rgba(255, 255, 255, 0.86);
   font-size: 0.78rem;
   font-weight: 800;
+}
+
+.install-help {
+  display: grid;
+  gap: 14px;
+  margin: 16px;
+  padding: 16px;
+  border: 1px solid rgba(201, 149, 93, 0.34);
+  border-radius: 8px;
+  background: #fffaf4;
+  box-shadow: 0 8px 22px rgba(15, 31, 47, 0.06);
+}
+
+.install-help[hidden] {
+  display: none;
+}
+
+.install-help h2 {
+  margin: 0 0 8px;
+  font-size: 1.2rem;
+  line-height: 1.12;
+}
+
+.install-help p:not(.eyebrow) {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
 }
 
 .steps {
@@ -435,7 +458,8 @@ textarea {
   .topbar,
   .booking,
   .history,
-  .hero {
+  .hero,
+  .install-help {
     padding-left: 28px;
     padding-right: 28px;
   }
