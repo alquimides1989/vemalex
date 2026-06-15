@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>VEMALEX Sesiones Jurídicas</title>
+    <meta name="description" content="App de VEMALEX para reservar sesiones pagadas de asistencia jurídica." />
+    <meta name="theme-color" content="#0f1f2f" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" href="../assets/logo-vemalex.png" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <img src="../assets/logo-vemalex.png" alt="" width="42" height="38" />
+          <div>
+            <strong>VEMALEX</strong>
+            <span>Sesiones jurídicas</span>
+          </div>
+        </div>
+        <button class="install-button" type="button" data-install hidden>Instalar</button>
+      </header>
+
+      <section class="hero">
+        <p class="eyebrow">Asistencia jurídica privada</p>
+        <h1>Reserva una sesión pagada con VEMALEX.</h1>
+        <p>
+          Elige el tipo de consulta, prepara los datos del caso y completa el pago o solicita el
+          enlace para confirmar tu sesión.
+        </p>
+      </section>
+
+      <section class="steps" aria-label="Progreso">
+        <button class="step active" type="button" data-step-jump="0"><span>1</span>Sesión</button>
+        <button class="step" type="button" data-step-jump="1"><span>2</span>Datos</button>
+        <button class="step" type="button" data-step-jump="2"><span>3</span>Pago</button>
+      </section>
+
+      <form class="booking" data-booking-form>
+        <section class="panel active" data-panel="0" aria-labelledby="session-title">
+          <h2 id="session-title">Tipo de sesión</h2>
+          <div class="session-grid" data-session-grid></div>
+          <label class="field">
+            Preferencia horaria
+            <select name="slot" required>
+              <option value="Manana">Mañana</option>
+              <option value="Tarde">Tarde</option>
+              <option value="Lo antes posible">Lo antes posible</option>
+            </select>
+          </label>
+          <label class="field">
+            Fecha orientativa
+            <input name="date" type="date" />
+          </label>
+          <button class="button primary" type="button" data-next>Continuar</button>
+        </section>
+
+        <section class="panel" data-panel="1" aria-labelledby="client-title">
+          <h2 id="client-title">Datos de contacto y caso</h2>
+          <label class="field">
+            Nombre completo
+            <input name="name" autocomplete="name" required />
+          </label>
+          <label class="field">
+            Teléfono
+            <input name="phone" type="tel" autocomplete="tel" required />
+          </label>
+          <label class="field">
+            Email
+            <input name="email" type="email" autocomplete="email" required />
+          </label>
+          <label class="field">
+            Área principal
+            <select name="area" required>
+              <option>Divorcio o separación</option>
+              <option>Custodia, visitas o menores</option>
+              <option>Pensión de alimentos</option>
+              <option>Modificación de medidas</option>
+              <option>Mediación familiar</option>
+              <option>Derecho penal</option>
+              <option>Derecho social</option>
+              <option>Otro asunto</option>
+            </select>
+          </label>
+          <label class="field">
+            Resume tu consulta
+            <textarea name="summary" rows="5" maxlength="900" required></textarea>
+          </label>
+          <label class="check">
+            <input name="consent" type="checkbox" required />
+            <span>Acepto que VEMALEX use estos datos para gestionar la sesión solicitada.</span>
+          </label>
+          <div class="actions">
+            <button class="button secondary" type="button" data-prev>Volver</button>
+            <button class="button primary" type="button" data-next>Preparar pago</button>
+          </div>
+        </section>
+
+        <section class="panel" data-panel="2" aria-labelledby="payment-title">
+          <h2 id="payment-title">Confirmación y pago</h2>
+          <div class="summary-card" data-summary></div>
+          <div class="payment-actions">
+            <a class="button primary" href="#" data-pay target="_blank" rel="noreferrer">Pagar sesión</a>
+            <a class="button secondary" href="#" data-whatsapp target="_blank" rel="noreferrer">Enviar por WhatsApp</a>
+            <a class="button secondary" href="#" data-email>Enviar por email</a>
+          </div>
+          <button class="button text" type="button" data-save>Guardar solicitud en este móvil</button>
+          <p class="notice" data-payment-note>
+            Los pagos se realizan en una pasarela externa segura. La sesión queda sujeta a confirmación
+            del despacho y no sustituye un servicio de urgencias.
+          </p>
+          <div class="actions">
+            <button class="button secondary" type="button" data-prev>Volver</button>
+            <button class="button primary" type="reset">Nueva solicitud</button>
+          </div>
+        </section>
+      </form>
+
+      <section class="history" aria-labelledby="history-title">
+        <div>
+          <p class="eyebrow">En este dispositivo</p>
+          <h2 id="history-title">Solicitudes guardadas</h2>
+        </div>
+        <div class="history-list" data-history-list></div>
+        <button class="button text" type="button" data-clear-history>Vaciar historial</button>
+      </section>
+    </main>
+
+    <template id="session-template">
+      <label class="session-card">
+        <input type="radio" name="session" required />
+        <span class="session-name"></span>
+        <strong class="session-price"></strong>
+        <small class="session-detail"></small>
+      </label>
+    </template>
+
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,25 @@
+{
+  "name": "VEMALEX Sesiones Jurídicas",
+  "short_name": "VEMALEX",
+  "description": "Reserva sesiones pagadas de asistencia jurídica con VEMALEX.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6f2eb",
+  "theme_color": "#0f1f2f",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
