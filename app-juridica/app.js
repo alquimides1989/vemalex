@@ -52,7 +52,7 @@ function formDataObject() {
   const session = selectedSession();
   return {
     ...data,
-    method: data.method || "Llamada telefonica",
+    method: data.method || "Llamada telefónica",
     sessionId: session.id,
     sessionName: session.name,
     sessionPrice: session.price,
@@ -67,16 +67,16 @@ function validateCurrentPanel() {
 
 function buildMessage(data) {
   return [
-    "Hola VEMALEX, quiero reservar una sesion juridica pagada.",
+    "Hola VEMALEX, quiero reservar una sesión jurídica pagada.",
     "",
-    `Sesion: ${data.sessionName} (${money.format(Number(data.sessionPrice))})`,
+    `Sesión: ${data.sessionName} (${money.format(Number(data.sessionPrice))})`,
     `Modalidad: ${data.method}`,
     `Preferencia: ${data.slot || "Sin indicar"}`,
     `Fecha orientativa: ${data.date || "Sin indicar"}`,
     `Nombre: ${data.name}`,
-    `Telefono: ${data.phone}`,
+    `Teléfono: ${data.phone}`,
     `Email: ${data.email}`,
-    `Area: ${data.area}`,
+    `Área: ${data.area}`,
     "",
     `Resumen: ${data.summary}`
   ].join("\n");
@@ -88,19 +88,19 @@ function updateSummary() {
   const message = buildMessage(data);
   summaryBox.innerHTML = `
     <dl>
-      <div><dt>Sesion</dt><dd>${session.name}</dd></div>
+      <div><dt>Sesión</dt><dd>${session.name}</dd></div>
       <div><dt>Importe</dt><dd>${money.format(session.price)}</dd></div>
       <div><dt>Modalidad</dt><dd>${data.method}</dd></div>
       <div><dt>Horario</dt><dd>${data.slot || "Sin indicar"}</dd></div>
-      <div><dt>Area</dt><dd>${data.area || "Sin indicar"}</dd></div>
+      <div><dt>Área</dt><dd>${data.area || "Sin indicar"}</dd></div>
     </dl>
   `;
   const encoded = encodeURIComponent(message);
   whatsAppLink.href = `https://wa.me/${config.phone}?text=${encoded}`;
-  emailLink.href = `mailto:${config.email}?subject=${encodeURIComponent("Reserva de sesion juridica")}&body=${encoded}`;
+  emailLink.href = `mailto:${config.email}?subject=${encodeURIComponent("Reserva de sesión jurídica")}&body=${encoded}`;
   if (session.paymentUrl) {
     payLink.href = session.paymentUrl;
-    payLink.textContent = "Pagar sesion";
+    payLink.textContent = "Pagar sesión";
   } else {
     payLink.href = `https://wa.me/${config.phone}?text=${encodeURIComponent("Hola VEMALEX, necesito el enlace de pago para " + session.name + " en modalidad " + data.method)}`;
     payLink.textContent = "Solicitar enlace de pago";
@@ -119,7 +119,7 @@ function renderHistory() {
   const saved = JSON.parse(localStorage.getItem("vemalex-requests") || "[]");
   historyList.innerHTML = "";
   if (!saved.length) {
-    historyList.innerHTML = "<p>No hay solicitudes guardadas todavia.</p>";
+    historyList.innerHTML = "<p>No hay solicitudes guardadas todavía.</p>";
     return;
   }
   saved.forEach((item) => {
@@ -127,7 +127,7 @@ function renderHistory() {
     const date = new Date(item.createdAt).toLocaleString("es-ES", { dateStyle: "short", timeStyle: "short" });
     article.innerHTML = `
       <strong>${item.sessionName}</strong>
-      <span>${date} - ${item.method || "Llamada telefonica"} - ${item.area}</span>
+      <span>${date} - ${item.method || "Llamada telefónica"} - ${item.area}</span>
       <small>${item.name} - ${item.phone}</small>
     `;
     historyList.appendChild(article);
@@ -184,7 +184,7 @@ closeInstallHelp.addEventListener("click", () => {
 });
 
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("service-worker.js?v=10", { updateViaCache: "none" }).then((registration) => {
+  navigator.serviceWorker.register("service-worker.js?v=11", { updateViaCache: "none" }).then((registration) => {
     registration.update();
   });
 }

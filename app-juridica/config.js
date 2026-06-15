@@ -15,7 +15,7 @@ window.VEMALEX_APP_CONFIG = {
       id: "strategy60",
       name: "Sesión estratégica",
       price: 85,
-      detail: "60 min para revisar escenario, documentos y proximos pasos.",
+      detail: "60 min para revisar escenario, documentos y próximos pasos.",
       paymentUrl: ""
     },
     {
