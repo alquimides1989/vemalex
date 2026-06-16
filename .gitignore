@@ -8,3 +8,10 @@ crm/backups/
 tools/
 android-vemalex-sesiones/.gradle/
 android-vemalex-sesiones/app/build/
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example
