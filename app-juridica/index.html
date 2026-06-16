@@ -6,11 +6,11 @@
     <title>VEMALEX Sesiones Jurídicas</title>
     <meta name="description" content="App de VEMALEX para reservar sesiones de asistencia jurídica." />
     <meta name="theme-color" content="#030f1f" />
-    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="manifest" href="manifest.webmanifest?v=blue-gold-8" />
     <link rel="icon" href="../assets/logo-vemalex.png" />
     <script>
       (() => {
-        const version = "blue-gold-7";
+        const version = "blue-gold-8";
         const params = new URLSearchParams(window.location.search);
         try {
           if (localStorage.getItem("vemalex-ui-version") === version || params.has("fresh")) return;
@@ -34,7 +34,7 @@
         }
       })();
     </script>
-    <link rel="stylesheet" href="styles.css?v=blue-gold-7" />
+    <link rel="stylesheet" href="styles.css?v=blue-gold-8" />
     <style>
       body,
       .app-shell {
@@ -332,7 +332,7 @@
       </label>
     </template>
 
-    <script src="config.js?v=blue-gold-7"></script>
-    <script src="app.js?v=blue-gold-7"></script>
+    <script src="config.js?v=blue-gold-8"></script>
+    <script src="app.js?v=blue-gold-8"></script>
   </body>
 </html>

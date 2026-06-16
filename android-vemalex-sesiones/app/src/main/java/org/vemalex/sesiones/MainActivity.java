@@ -3,6 +3,7 @@ package org.vemalex.sesiones;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.webkit.WebChromeClient;
@@ -19,6 +20,7 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         webView = new WebView(this);
+        webView.setBackgroundColor(Color.rgb(3, 15, 31));
         setContentView(webView);
 
         WebSettings settings = webView.getSettings();

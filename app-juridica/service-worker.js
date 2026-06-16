@@ -1,12 +1,12 @@
-const CACHE_NAME = "vemalex-sesiones-v13";
+const CACHE_NAME = "vemalex-sesiones-v14";
 const APP_SHELL = "./";
 const APP_ASSETS = [
   "./",
   "./index.html",
-  "./styles.css?v=blue-gold-7",
-  "./app.js?v=blue-gold-7",
-  "./config.js?v=blue-gold-7",
-  "./manifest.webmanifest",
+  "./styles.css?v=blue-gold-8",
+  "./app.js?v=blue-gold-8",
+  "./config.js?v=blue-gold-8",
+  "./manifest.webmanifest?v=blue-gold-8",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "../assets/logo-vemalex.png"
